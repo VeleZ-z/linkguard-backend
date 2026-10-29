@@ -61,7 +61,7 @@ La configuración se valida con **Pydantic Settings** en
 | `RATE_LIMIT_PER_MINUTE` | `30` | Peticiones por minuto por IP. |
 | `PHISHTANK_API_URL` | endpoint público | URL de consulta de PhishTank. |
 
-`.env` está excluido de Git; nunca se versionan valores reales.
+`.env` real está excluido de Git.
 
 ## Comandos de verificación
 
