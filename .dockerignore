@@ -1,0 +1,48 @@
+# Contexto de build mínimo para la imagen de producción (H1-T11).
+# Todo lo que no sea requirements.txt + app/ sobra dentro del contenedor.
+
+# Control de versiones y configuración del repositorio
+.git/
+.gitignore
+.github/
+.dockerignore
+Dockerfile
+*.md
+AGENTS.md
+
+# Secretos y configuración local (nunca deben viajar en la imagen)
+.env
+.env.*
+!.env.example
+
+# Entornos virtuales y artefactos de Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Pruebas, documentación y scripts de desarrollo
+tests/
+docs/
+scripts/
+
+# Herramientas de calidad, cobertura y cachés
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.directory
+
+# Editores y sistema operativo
+.idea/
+.vscode/
+.DS_Store
+*.log

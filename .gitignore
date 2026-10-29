@@ -1,0 +1,32 @@
+# Secretos y entorno local
+.env
+.env.*
+!.env.example
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Artefactos de Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Herramientas de calidad y pruebas
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Editores y sistema operativo
+.idea/
+.vscode/
+.DS_Store
+*.log

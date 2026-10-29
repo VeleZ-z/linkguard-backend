@@ -1,0 +1,10 @@
+# Dependencias de producción — LinkGuard Backend
+# Fuente de instalación para Docker y CI. Mantener sincronizado con las
+# dependencias declaradas en pyproject.toml.
+fastapi>=0.110.0,<1.0.0
+uvicorn[standard]>=0.28.0,<1.0.0
+pydantic>=2.6.0,<3.0.0
+pydantic-settings>=2.6.0,<3.0.0
+httpx>=0.27.0,<1.0.0
+slowapi>=0.1.9,<1.0.0
+publicsuffix2>=2.20191221,<3.0.0

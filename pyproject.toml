@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linkguard-backend"
+version = "0.1.0"
+description = "API REST de LinkGuard: evaluación sintáctico-léxica del riesgo de phishing en URLs."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  { name = "Juan Camilo Vélez" },
+  { name = "Jesús De Oro" },
+]
+dependencies = [
+  "fastapi>=0.110.0,<1.0.0",
+  "uvicorn[standard]>=0.28.0,<1.0.0",
+  "pydantic>=2.6.0,<3.0.0",
+  "pydantic-settings>=2.6.0,<3.0.0",
+  "httpx>=0.27.0,<1.0.0",
+  "slowapi>=0.1.9,<1.0.0",
+  "publicsuffix2>=2.20191221,<3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.1.0,<9.0.0",
+  "pytest-cov>=4.1.0,<5.0.0",
+  "pytest-asyncio>=0.23.0,<1.0.0",
+  "respx>=0.21.0,<1.0.0",
+  "ruff>=0.3.0,<1.0.0",
+  "bandit>=1.7.8,<2.0.0",
+  "pip-audit>=2.7.0,<3.0.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+# --- Ruff (linter + formateador) -------------------------------------------
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["app", "tests"]
+extend-exclude = ["docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "T20"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# --- Pytest ----------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers --cov=app --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+# --- Cobertura -------------------------------------------------------------
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+]
+
+# --- Bandit (SAST) ---------------------------------------------------------
+[tool.bandit]
+exclude_dirs = [".venv", "venv", "tests"]

@@ -1,0 +1,96 @@
+name: LinkGuard Backend CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Cancela ejecuciones obsoletas del mismo ref (ahorra minutos de CI).
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-sast:
+    name: Code Quality & Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run Ruff (linter)
+        run: ruff check .
+
+      - name: Run Ruff (format check)
+        run: ruff format --check .
+
+      - name: Run Bandit (SAST)
+        run: bandit -r ./app -ll
+
+      - name: Audit dependencies (supply chain)
+        run: pip-audit -r requirements.txt
+
+  test:
+    name: Unit & Integration Tests
+    needs: lint-and-sast
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run pytest with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=80
+
+  docker-build:
+    name: Docker Build Check
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: linkguard-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify compressed image size (< 180 MB)
+        run: |
+          docker save linkguard-backend:test | gzip -1 | wc -c \
+            | awk '{ printf "Tamaño comprimido de la imagen: %.1f MB\n", $1/1000000; exit ($1 > 180000000) }'
