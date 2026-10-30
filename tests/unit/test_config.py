@@ -89,6 +89,13 @@ class TestCorsOrigins:
         monkeypatch.setenv("CORS_ORIGINS", '["https://x.local"]')
         assert Settings().CORS_ORIGINS == ["https://x.local"]
 
+    @pytest.mark.parametrize("value", ["*", "https://*.local", "http://a.local,*"])
+    def test_rechaza_comodines(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        """Un comodín abriría la API a cualquier origen (endurecimiento H3-T11)."""
+        monkeypatch.setenv("CORS_ORIGINS", value)
+        with pytest.raises(ValidationError):
+            Settings()
+
 
 class TestPhishtankTimeout:
     """Campo PHISHTANK_TIMEOUT (>0, <=30)."""
@@ -145,14 +152,20 @@ class TestRateLimitPerMinute:
 
 
 class TestPhishtankApiUrl:
-    """Campo PHISHTANK_API_URL (debe ser http(s) absoluto)."""
+    """Campo PHISHTANK_API_URL (HTTP(S), sin credenciales y host autorizado)."""
 
     def test_valor_por_defecto(self) -> None:
         assert Settings().PHISHTANK_API_URL == "https://checkurl.phishtank.com/checkurl/"
 
     @pytest.mark.parametrize(
         "value",
-        ["http://phishtank.local/check", "https://phishtank.local/check/"],
+        [
+            "http://checkurl.phishtank.com/checkurl/",
+            "https://checkurl.phishtank.com/checkurl/",
+            "https://CHECKURL.PhishTank.com/checkurl/",
+            "https://checkurl.phishtank.com:443/checkurl/",
+            "https://checkurl.phishtank.com./checkurl/",
+        ],
     )
     def test_url_valida(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
         monkeypatch.setenv("PHISHTANK_API_URL", value)
@@ -160,9 +173,42 @@ class TestPhishtankApiUrl:
 
     @pytest.mark.parametrize(
         "value",
-        ["ftp://phishtank.local", "not-a-url", "", "///relative"],
+        ["ftp://checkurl.phishtank.com/checkurl/", "not-a-url", "", "///relative"],
     )
     def test_url_invalida(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        monkeypatch.setenv("PHISHTANK_API_URL", value)
+        with pytest.raises(ValidationError):
+            Settings()
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "http://phishtank.local/check",
+            "http://127.0.0.1:8000/checkurl/",
+            "https://evil.example/checkurl/",
+            "https://phishtank.com/checkurl/",
+            "https://checkurl.phishtank.com.evil.example/checkurl/",
+            "https://evilcheckurl.phishtank.com/checkurl/",
+            "https://checkurl.phishtank.com@evil.example/checkurl/",
+        ],
+    )
+    def test_rechaza_host_no_autorizado(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        """OBS-1: la única petición saliente no puede apuntar a un host arbitrario."""
+        monkeypatch.setenv("PHISHTANK_API_URL", value)
+        with pytest.raises(ValidationError):
+            Settings()
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "https://usuario:clave@checkurl.phishtank.com/checkurl/",
+            "https://clave@checkurl.phishtank.com/checkurl/",
+        ],
+    )
+    def test_rechaza_credenciales_embebidas(
+        self, monkeypatch: pytest.MonkeyPatch, value: str
+    ) -> None:
+        """Una URL de servicio con credenciales es un secreto en configuración."""
         monkeypatch.setenv("PHISHTANK_API_URL", value)
         with pytest.raises(ValidationError):
             Settings()

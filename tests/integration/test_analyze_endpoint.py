@@ -10,8 +10,10 @@ from collections.abc import AsyncIterator
 
 import httpx
 import pytest
+from app.clients.phishtank import PhishtankResult
 from app.core.rate_limit import limiter
 from app.main import app
+from app.schemas import PhishtankStatus
 
 VALID_URL = "http://example.com/news"
 
@@ -167,7 +169,7 @@ class TestAnalyzeErrores:
         def _falla(_: str) -> None:
             raise RuntimeError("detalle-interno-secreto")
 
-        monkeypatch.setattr("app.api.v1.analyze.normalize", _falla)
+        monkeypatch.setattr("app.services.analyzer.normalize", _falla)
         transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         async with httpx.AsyncClient(
             transport=transport, base_url="http://testserver"
@@ -209,3 +211,42 @@ class TestCors:
         response = await client.get("/health")
         assert response.status_code == 200
         assert "access-control-allow-origin" not in response.headers
+
+
+class TestAnalyzeConReputacion:
+    """El endpoint delega en el orquestador y refleja PhishTank (H3-T06)."""
+
+    async def test_match_phishtank_suma_50_y_fuerza_alto(
+        self, client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        class _ClienteMatch:
+            async def check_url(self, url: str) -> PhishtankResult:
+                return PhishtankResult(is_match=True, status=PhishtankStatus.AVAILABLE)
+
+        monkeypatch.setattr("app.services.analyzer.get_phishtank_client", lambda: _ClienteMatch())
+
+        response = await client.post("/api/v1/analyze", json={"url": VALID_URL})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["score"] == 50
+        assert body["risk_level"] == "Alto"
+        assert body["phishtank_status"] == "available"
+        assert "MATCH_PHISHTANK" in {e["rule_id"] for e in body["evidences"]}
+
+    async def test_timeout_devuelve_200_con_analisis_lexico(
+        self, client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        class _ClienteTimeout:
+            async def check_url(self, url: str) -> PhishtankResult:
+                return PhishtankResult(is_match=False, status=PhishtankStatus.TIMEOUT)
+
+        monkeypatch.setattr("app.services.analyzer.get_phishtank_client", lambda: _ClienteTimeout())
+
+        response = await client.post("/api/v1/analyze", json={"url": "http://10.0.0.1/login"})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["phishtank_status"] == "timeout"
+        assert body["score"] == 40
+        assert body["risk_level"] == "Medio"

@@ -55,13 +55,17 @@ La configuración se valida con **Pydantic Settings** en
 | :--- | :--- | :--- |
 | `ENVIRONMENT` | `development` | `development`, `testing` o `production`. |
 | `PORT` | `8000` | Puerto de escucha (Render usa `10000`). |
-| `CORS_ORIGINS` | `http://localhost:5173` | Orígenes CORS separados por coma. |
+| `CORS_ORIGINS` | `http://localhost:5173` | Orígenes CORS separados por coma. Prohibido `*`. |
 | `PHISHTANK_TIMEOUT` | `4.0` | Timeout de la API de reputación (s). |
 | `PHISHTANK_TTL_SECONDS` | `7200` | TTL de la caché LRU (s). |
 | `RATE_LIMIT_PER_MINUTE` | `30` | Peticiones por minuto por IP. |
-| `PHISHTANK_API_URL` | endpoint público | URL de consulta de PhishTank. |
+| `PHISHTANK_API_URL` | `https://checkurl.phishtank.com/checkurl/` | Único destino saliente permitido; el host debe ser `checkurl.phishtank.com`. |
 
 `.env` real está excluido de Git.
+
+En producción el contenedor arranca Uvicorn con `--proxy-headers
+--forwarded-allow-ips='*'`, de modo que el rate limit se aplica por IP real del
+cliente (cabecera `X-Forwarded-For` del proxy) y no por la IP del proxy.
 
 ## Comandos de verificación
 

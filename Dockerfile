@@ -61,7 +61,17 @@ USER appuser
 
 EXPOSE 8000
 
+# El HEALTHCHECK consulta el mismo puerto en el que escucha Uvicorn: Render
+# inyecta PORT=10000, así que un puerto fijo dejaría el contenedor en bucle de
+# reinicio. Se resuelve en Python para no depender de la expansión del shell.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=4)" || exit 1
+    CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/health', timeout=4)" || exit 1
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# OBS-3: `--proxy-headers` hace que Uvicorn reescriba `scope["client"]` con la
+# IP de `X-Forwarded-For`, de modo que el rate limit (30/min) se aplica por
+# cliente real y no por la IP del proxy de Render. `--forwarded-allow-ips='*'`
+# es necesario porque el proxy de la plataforma no tiene una IP fija: el
+# servicio no está expuesto directamente a Internet, solo a través del edge.
+# `${PORT:-8000}` permite que Render inyecte su puerto sin reconstruir la
+# imagen, manteniendo 8000 como valor local por defecto.
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

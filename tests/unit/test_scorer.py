@@ -159,3 +159,49 @@ class TestRecommendations:
     def test_pesos_declarados_suman_mas_de_cien(self) -> None:
         assert WEIGHTS["MATCH_PHISHTANK"] == 50
         assert MAX_WEIGHT_SUM > MAX_SCORE
+
+
+class TestElevacionPhishtank:
+    """RF-405: la reputación suma 50 puntos y fuerza Riesgo Alto."""
+
+    def test_suma_cincuenta_puntos(self) -> None:
+        assert calculate_score([], phishtank_match=True) == 50
+        assert calculate_score([_result("F02", 25)], phishtank_match=True) == 75
+
+    def test_respeta_el_tope_de_cien(self) -> None:
+        results = [_result("F02", 25), _result("F06", 20), _result("F08", 20)]
+
+        assert calculate_score(results, phishtank_match=True) == MAX_SCORE
+
+    def test_fuerza_nivel_alto_con_score_lexico_bajo(self) -> None:
+        result = score_results([], phishtank_match=True)
+
+        assert result.score == 50
+        assert result.risk_level is RiskLevel.ALTO
+
+    def test_fuerza_nivel_alto_dentro_del_rango_medio(self) -> None:
+        result = score_results([_result("F02", 10)], phishtank_match=True)
+
+        assert result.score == 60
+        assert result.risk_level is RiskLevel.ALTO
+
+    def test_sin_coincidencia_conserva_el_resultado_lexico(self) -> None:
+        result = score_results([_result("F02", 25)], phishtank_match=False)
+
+        assert result.score == 25
+        assert result.risk_level is RiskLevel.BAJO
+
+    def test_agrega_evidencia_match_phishtank_al_final(self) -> None:
+        results = [_result("F02", 25)]
+
+        evidences = build_evidences(results, phishtank_match=True)
+
+        assert [evidence.rule_id for evidence in evidences] == ["F02", "MATCH_PHISHTANK"]
+        assert evidences[-1].points == WEIGHTS["MATCH_PHISHTANK"] == 50
+        assert evidences[-1].title == "Reporte en lista negra de PhishTank"
+        assert evidences[-1].description
+
+    def test_sin_coincidencia_no_agrega_evidencia(self) -> None:
+        evidences = build_evidences([_result("F02", 25)], phishtank_match=False)
+
+        assert [evidence.rule_id for evidence in evidences] == ["F02"]
