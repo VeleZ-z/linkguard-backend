@@ -62,13 +62,10 @@ La configuración se valida con **Pydantic Settings** en
 | `PHISHTANK_API_URL` | endpoint público | URL de consulta de PhishTank. |
 
 `.env` real está excluido de Git.
-<<<<<<< HEAD
 
 En producción el contenedor arranca Uvicorn con `--proxy-headers
 --forwarded-allow-ips='*'`, de modo que el rate limit se aplica por IP real del
 cliente (cabecera `X-Forwarded-For` del proxy) y no por la IP del proxy.
-=======
->>>>>>> 06cc893 (linkguard v0.3.0-phishtank)
 
 ## Comandos de verificación
 
