@@ -44,14 +44,17 @@ El objetivo principal es garantizar que el prototipo opere con **cero ejecucione
 | **`TC-F01-N`** | `RF-201` (F01) | Cadena de 45 caracteres | `False` | **0 pts** | Longitud $< 75$ no suma puntos. |
 | **`TC-F02-P`** | `RF-202` (F02) | Dirección IP en host (`10.0.0.1`) | `True` | **+25 pts** | Detección explícita de IPv4 directa. |
 | **`TC-F03-P`** | `RF-203` (F03) | Múltiples niveles de subdominio | `True` | **+10 pts** | Subdominios $\ge 3$ (excluyendo dominio raíz y TLD). |
-| **`TC-F04-P`** | `RF-204` (F04) | Cadena de host con entropía $H(X) = 4.8$ | `True` | **+15 pts** | Entropía de Shannon del host $> 4.5$ bits/símbolo. |
+| **`TC-F04-P`** | `RF-204` (F04) | Etiqueta de subdominio aleatoria con $H(X) \approx 4.7$ | `True` | **+15 pts** | Entropía de Shannon por etiqueta $> 4.5$ bits/símbolo. |
+| **`TC-F04-N`** | `RF-204` (F04) | Host IP literal (`10.0.0.1`) | `False` | **0 pts** | F04 no evalúa IP; F02 es la regla responsable. |
+| **`TC-F04-N2`** | `RF-204` (F04) | Subdominio legible (`secure-login`) + dominio limpio | `False` | **0 pts** | Solo se evalúan etiquetas de subdominio cuando existen. |
 | **`TC-F05-P`** | `RF-205` (F05) | Dominio de servicio acortador | `True` | **+15 pts** | Coincidencia en hashset de acortadores conocidos. |
 | **`TC-F06-P`** | `RF-206` (F06) | Estructura con carácter `@` | `True` | **+20 pts** | Presencia del carácter `@` en la estructura de la URL. |
 | **`TC-F07-P`** | `RF-207` (F07) | Dominio con múltiples guiones | `True` | **+8 pts** | Dos o más guiones en el nombre del dominio principal. |
 | **`TC-F08-P`** | `RF-208` (F08) | Redirección de esquema en path/query | `True` | **+20 pts** | Subcadena de esquema dentro de path o query. |
 | **`TC-F09-P`** | `RF-209` (F09) | Especificación de puerto no estándar | `True` | **+10 pts** | Puerto explícito distinto de 80 y 443. |
 | **`TC-F10-P`** | `RF-210` (F10) | Ratio de caracteres especiales $> 15\%$ | `True` | **+7 pts** | Proporción de símbolos sobre longitud total. |
-| **`TC-F11-P`** | `RF-211` (F11) | Presencia de palabras clave sensibles | `True` | **+15 pts** | Coincidencia con lista de términos sensibles. |
+| **`TC-F11-P`** | `RF-211` (F11) | Términos sensibles con tildes (`iniciar-sesión`, `contraseña`, `verificación`) y marcas (`bancolombia-seguridad`, `paypal-soporte`) | `True` | **+15 pts** | Normalización NFKD y coincidencia por tokens. |
+| **`TC-F11-N`** | `RF-211` (F11) | Subcadenas en palabras legítimas (`shopping`, `routes`, `guardian`) | `False` | **0 pts** | Los términos cortos ambiguos solo coinciden como token completo. |
 
 
 ### Módulo 300: Algorithm Scoring, Clasificación y Explicabilidad
