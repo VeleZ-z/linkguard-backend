@@ -1,9 +1,17 @@
-"""Cliente asíncrono de reputación de PhishTank (RF-401…RF-404, RNF-101).
+"""Cliente asíncrono de reputación de PhishTank (RF-401…RF-405, RNF-101).
 
 El cliente consulta únicamente el endpoint público configurado en
 ``PHISHTANK_API_URL``. Nunca contacta la URL ingresada por el usuario, no usa
 claves de API y degrada cualquier fallo de red a un resultado neutro con
 ``is_match=False``, de modo que el endpoint siempre pueda responder HTTP 200.
+
+La respuesta de PhishTank distingue dos estados dentro de su base de datos:
+
+* ``in_database=True`` y ``valid=True`` → coincidencia confirmada
+  (``is_match=True``).
+* ``in_database=True`` y ``valid=False``/``"Unknown"`` → reporte pendiente de
+  verificación por la comunidad (``is_unverified=True``), que el motor de
+  scoring penaliza con 15 puntos sin forzar el nivel Alto (Opción B).
 """
 
 from __future__ import annotations
@@ -22,12 +30,26 @@ from app.schemas import PhishtankStatus
 #: Identificador propio enviado en el encabezado ``User-Agent``.
 USER_AGENT: Final[str] = "phishtank/linkguard-api-v1.0"
 
+#: Representaciones textuales que PhishTank puede devolver en ``valid``.
+_VALID_TRUE: Final[frozenset[str]] = frozenset({"true", "1", "yes", "y", "valid"})
+_VALID_FALSE: Final[frozenset[str]] = frozenset(
+    {"false", "0", "no", "n", "unknown", "unverified", "pending", "invalid", ""}
+)
+
 
 @dataclass(frozen=True, slots=True)
 class PhishtankResult:
-    """Resultado normalizado de una consulta de reputación."""
+    """Resultado normalizado de una consulta de reputación.
+
+    Attributes:
+        is_match: La URL está en la base de datos y fue validada como phishing.
+        is_unverified: La URL está reportada, pero su verificación está
+            pendiente. Nunca es ``True`` a la vez que ``is_match``.
+        status: Estado de la consulta externa.
+    """
 
     is_match: bool = False
+    is_unverified: bool = False
     status: PhishtankStatus = PhishtankStatus.UNAVAILABLE
 
 
@@ -62,8 +84,34 @@ class PhishtankClient:
         return hashlib.sha256(url.encode("utf-8")).hexdigest()
 
     @staticmethod
-    def _is_match(payload: object) -> bool:
-        """Interpreta la respuesta JSON de PhishTank como coincidencia activa."""
+    def _is_valid(results: dict[str, object]) -> bool:
+        """Interpreta ``valid`` como confirmación, incluyendo ``"Unknown"``.
+
+        PhishTank puede enviar un booleano o una cadena. Cualquier valor no
+        reconocido o ``None`` se considera **no validado**: es más seguro
+        tratar un reporte dudoso como pendiente que como confirmado.
+        """
+        value = results.get("valid", True)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in _VALID_TRUE:
+                return True
+            if normalized in _VALID_FALSE:
+                return False
+            return False
+        if value is None:
+            return False
+        return bool(value)
+
+    @classmethod
+    def _parse_flags(cls, payload: object) -> tuple[bool, bool]:
+        """Extrae ``(is_match, is_unverified)`` de la respuesta de PhishTank.
+
+        Raises:
+            ValueError: Si el JSON no tiene la estructura esperada.
+        """
         if not isinstance(payload, dict):
             raise ValueError("Respuesta de PhishTank con formato inesperado")
 
@@ -71,9 +119,16 @@ class PhishtankClient:
         if not isinstance(results, dict):
             raise ValueError("Respuesta de PhishTank sin bloque 'results'")
 
-        in_database = bool(results.get("in_database"))
-        valid = bool(results.get("valid", True))
-        return in_database and valid
+        if not bool(results.get("in_database")):
+            return False, False
+        if cls._is_valid(results):
+            return True, False
+        return False, True
+
+    @classmethod
+    def _is_match(cls, payload: object) -> bool:
+        """Interpreta la respuesta JSON como coincidencia activa confirmada."""
+        return cls._parse_flags(payload)[0]
 
     async def _query(self, url: str) -> object:
         """Ejecuta la consulta HTTP y devuelve el JSON decodificado."""
@@ -98,24 +153,33 @@ class PhishtankClient:
 
         Returns:
             ``PhishtankResult`` con ``status`` ``cached``, ``available``,
-            ``timeout`` o ``unavailable``. Ante cualquier fallo, ``is_match``
-            es ``False`` y no se lanza ninguna excepción.
+            ``timeout`` o ``unavailable``. Ante cualquier fallo, ambos flags
+            son ``False`` y no se lanza ninguna excepción.
         """
         key = self.cache_key(url)
-        cached = self._cache.get(key)
+        cached = self._cache.get_flags(key)
         if cached is not None:
-            return PhishtankResult(is_match=cached, status=PhishtankStatus.CACHED)
+            is_match, is_unverified = cached
+            return PhishtankResult(
+                is_match=is_match,
+                is_unverified=is_unverified,
+                status=PhishtankStatus.CACHED,
+            )
 
         try:
             payload = await self._query(url)
-            is_match = self._is_match(payload)
+            is_match, is_unverified = self._parse_flags(payload)
         except httpx.TimeoutException:
             return PhishtankResult(status=PhishtankStatus.TIMEOUT)
         except (httpx.HTTPError, ValueError):
             return PhishtankResult(status=PhishtankStatus.UNAVAILABLE)
 
-        self._cache.set(key, is_match)
-        return PhishtankResult(is_match=is_match, status=PhishtankStatus.AVAILABLE)
+        self._cache.set(key, is_match, is_unverified)
+        return PhishtankResult(
+            is_match=is_match,
+            is_unverified=is_unverified,
+            status=PhishtankStatus.AVAILABLE,
+        )
 
 
 @lru_cache

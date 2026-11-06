@@ -15,6 +15,8 @@ from app.scoring.recommendations import (
 )
 from app.scoring.scorer import (
     MAX_SCORE,
+    PHISHTANK_UNVERIFIED_POINTS,
+    PHISHTANK_UNVERIFIED_RULE_ID,
     calculate_score,
     classify_risk,
     score_results,
@@ -205,3 +207,77 @@ class TestElevacionPhishtank:
         evidences = build_evidences([_result("F02", 25)], phishtank_match=False)
 
         assert [evidence.rule_id for evidence in evidences] == ["F02"]
+
+
+class TestReporteNoVerificado:
+    """Opción B: +15 puntos sin forzar el nivel Alto."""
+
+    def test_suma_quince_puntos(self) -> None:
+        assert calculate_score([], phishtank_unverified=True) == 15
+        assert calculate_score([_result("F02", 25)], phishtank_unverified=True) == 40
+
+    def test_respeta_el_tope_de_cien(self) -> None:
+        results = [_result("F02", 25), _result("F06", 20), _result("F08", 20), _result("F11", 15)]
+
+        assert calculate_score(results, phishtank_unverified=True) == 95
+        assert calculate_score([_result("X", 90)], phishtank_unverified=True) == MAX_SCORE
+
+    def test_no_fuerza_nivel_alto_con_score_bajo(self) -> None:
+        result = score_results([], phishtank_unverified=True)
+
+        assert result.score == 15
+        assert result.risk_level is RiskLevel.BAJO
+
+    @pytest.mark.parametrize(
+        ("puntos_lexicos", "score_esperado", "nivel_esperado"),
+        [
+            (0, 15, RiskLevel.BAJO),
+            (16, 31, RiskLevel.MEDIO),
+            (40, 55, RiskLevel.MEDIO),
+            (55, 70, RiskLevel.ALTO),
+        ],
+    )
+    def test_clasifica_con_las_fronteras_normales(
+        self,
+        puntos_lexicos: int,
+        score_esperado: int,
+        nivel_esperado: RiskLevel,
+    ) -> None:
+        result = score_results(
+            [_result("F02", puntos_lexicos)],
+            phishtank_unverified=True,
+        )
+
+        assert result.score == score_esperado
+        assert result.risk_level is nivel_esperado
+
+    def test_la_coincidencia_confirmada_tiene_prioridad(self) -> None:
+        result = score_results(
+            [],
+            phishtank_match=True,
+            phishtank_unverified=True,
+        )
+
+        assert result.score == 50
+        assert result.risk_level is RiskLevel.ALTO
+
+    def test_agrega_evidencia_no_verificada_al_final(self) -> None:
+        evidences = build_evidences([_result("F02", 25)], phishtank_unverified=True)
+
+        assert [evidence.rule_id for evidence in evidences] == ["F02", "PHISHTANK_UNVERIFIED"]
+        assert evidences[-1].points == PHISHTANK_UNVERIFIED_POINTS == 15
+        assert evidences[-1].rule_id == PHISHTANK_UNVERIFIED_RULE_ID
+        assert evidences[-1].title == "Reporte no verificado en PhishTank"
+        assert evidences[-1].description == (
+            "La URL se encuentra registrada en la base de datos de PhishTank, pero su "
+            "estado de verificación por la comunidad aún está pendiente."
+        )
+
+    def test_no_duplica_la_evidencia_externa_con_match(self) -> None:
+        evidences = build_evidences(
+            [],
+            phishtank_match=True,
+            phishtank_unverified=True,
+        )
+
+        assert [evidence.rule_id for evidence in evidences] == ["MATCH_PHISHTANK"]

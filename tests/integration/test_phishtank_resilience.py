@@ -28,6 +28,10 @@ def _payload_no_encontrado() -> dict:
     return {"results": {"in_database": False, "valid": True}}
 
 
+def _payload_no_verificado() -> dict:
+    return {"results": {"in_database": True, "valid": False}}
+
+
 def _cliente_real(monkeypatch: pytest.MonkeyPatch) -> None:
     """Restaura el cliente real para que respx intercepte su httpx."""
     reset_phishtank_cache()
@@ -72,6 +76,47 @@ class TestTCRF401TCRF402:
         assert body["score"] == 40
         assert body["risk_level"] == "Medio"
         assert "MATCH_PHISHTANK" not in {e["rule_id"] for e in body["evidences"]}
+
+
+class TestPhishtankNoVerificado:
+    """Opción B: ``in_database=True`` y ``valid=False`` → +15 sin forzar Alto."""
+
+    @respx.mock
+    async def test_reporte_no_verificado_suma_quince(
+        self, client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        ruta = respx.post(API_URL).mock(
+            return_value=httpx.Response(200, json=_payload_no_verificado())
+        )
+        _cliente_real(monkeypatch)
+
+        response = await client.post("/api/v1/analyze", json={"url": URL_LIMPIA})
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["phishtank_status"] == "available"
+        assert body["score"] == 15
+        assert body["risk_level"] == "Bajo"
+        evidencias = {e["rule_id"]: e for e in body["evidences"]}
+        assert set(evidencias) == {"PHISHTANK_UNVERIFIED"}
+        assert evidencias["PHISHTANK_UNVERIFIED"]["points"] == 15
+        assert evidencias["PHISHTANK_UNVERIFIED"]["title"] == "Reporte no verificado en PhishTank"
+        assert "MATCH_PHISHTANK" not in evidencias
+        assert ruta.called
+
+    @respx.mock
+    async def test_reporte_no_verificado_clasifica_con_frontera_normal(
+        self, client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        respx.post(API_URL).mock(return_value=httpx.Response(200, json=_payload_no_verificado()))
+        _cliente_real(monkeypatch)
+
+        response = await client.post("/api/v1/analyze", json={"url": URL_SOSPECHOSA})
+
+        body = response.json()
+        # 40 puntos léxicos (F02 + F11) + 15 de reputación = 55 → Medio.
+        assert body["score"] == 55
+        assert body["risk_level"] == "Medio"
 
 
 class TestTCRF403:

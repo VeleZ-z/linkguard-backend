@@ -78,6 +78,7 @@ El objetivo principal es garantizar que el prototipo opere con **cero ejecucione
 | **`TC-RF-403`** | API externa demora $> 4.0\text{ s}$ (Timeout) | `"timeout"` | Puntaje Léxico | Interrupción a los 4.0s; retorna HTTP 200 con fallback local. |
 | **`TC-RF-404`** | API de reputación retorna error `HTTP 503` | `"unavailable"` | Puntaje Léxico | Captura silenciosa de la excepción; no genera error 500 al cliente. |
 | **`TC-RF-405`** | Misma URL consultada 2 veces en $< 2\text{ horas}$ | `"cached"` | Inmediato ($< 1\text{ ms}$) | Recuperación directa desde la caché LRU volátil en RAM. |
+| **`TC-RF-406`** | PhishTank responde `in_database=true` y `valid=false` | `"available"` | **+15 pts** (sin forzar Alto) | Reporte pendiente: evidencia `PHISHTANK_UNVERIFIED`; 40 léxicos + 15 = 55 → Medio. |
 
 
 ---

@@ -2,7 +2,9 @@
 
 Envuelve :class:`~app.cache.ttl_lru.TTLLRUCache` con la API que consume el
 cliente de reputación: la clave es el hash SHA-256 de la URL (para no retener
-URLs completas) y el valor es un booleano ``is_phish``. Todo vive en RAM.
+URLs completas) y el valor es la tupla ``(is_match, is_unverified)``. Se
+cachean ambos indicadores para que una segunda consulta conserve la misma
+clasificación que la primera. Todo vive en RAM (RNF-103).
 """
 
 from __future__ import annotations
@@ -16,6 +18,9 @@ from app.core.config import get_settings
 #: Capacidad máxima de la caché de PhishTank.
 DEFAULT_MAX_ENTRIES: Final[int] = 4096
 
+#: Valor cacheado: ``(is_match, is_unverified)``.
+type CachedReputation = tuple[bool, bool]
+
 
 class PhishtankCache:
     """Caché RAM de resultados de reputación con TTL configurable."""
@@ -25,7 +30,7 @@ class PhishtankCache:
         ttl_seconds: float | None = None,
         *,
         max_entries: int = DEFAULT_MAX_ENTRIES,
-        cache: TTLLRUCache[str, bool] | None = None,
+        cache: TTLLRUCache[str, CachedReputation] | None = None,
     ) -> None:
         """Inicializa la caché usando el TTL de la configuración si se omite."""
         if cache is not None:
@@ -37,15 +42,29 @@ class PhishtankCache:
             if ttl_seconds is not None
             else float(get_settings().PHISHTANK_TTL_SECONDS)
         )
-        self._cache = TTLLRUCache[str, bool](effective_ttl, max_entries=max_entries)
+        self._cache = TTLLRUCache[str, CachedReputation](effective_ttl, max_entries=max_entries)
 
     def get(self, url_hash: str) -> bool | None:
-        """Devuelve ``is_phish`` cacheado o ``None`` si no hay entrada vigente."""
+        """Devuelve ``is_match`` (compatibilidad) o ``None`` si no hay entrada.
+
+        Para recuperar también el estado de verificación se usa
+        :meth:`get_flags`.
+        """
+        flags = self._cache.get(url_hash)
+        return None if flags is None else flags[0]
+
+    def get_flags(self, url_hash: str) -> CachedReputation | None:
+        """Devuelve ``(is_match, is_unverified)`` o ``None`` si no hay entrada."""
         return self._cache.get(url_hash)
 
-    def set(self, url_hash: str, is_phish: bool) -> None:
+    def set(
+        self,
+        url_hash: str,
+        is_phish: bool,
+        is_unverified: bool = False,
+    ) -> None:
         """Almacena el resultado de reputación para ``url_hash``."""
-        self._cache.set(url_hash, is_phish)
+        self._cache.set(url_hash, (is_phish, is_unverified))
 
     def clear(self) -> None:
         """Vacía la caché completa."""
@@ -69,6 +88,7 @@ def reset_phishtank_cache() -> None:
 
 __all__ = [
     "DEFAULT_MAX_ENTRIES",
+    "CachedReputation",
     "PhishtankCache",
     "get_phishtank_cache",
     "reset_phishtank_cache",

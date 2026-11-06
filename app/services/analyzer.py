@@ -63,7 +63,9 @@ async def analyze_url(url: str, *, client: PhishtankClient | None = None) -> Ana
 
     Returns:
         ``AnalyzeResponse`` con puntaje, nivel, evidencias, recomendación,
-        ``phishtank_status`` real y tiempo total en milisegundos.
+        ``phishtank_status`` real y tiempo total en milisegundos. Un reporte
+        de PhishTank pendiente de verificación suma 15 puntos y se clasifica
+        con las fronteras normales (Opción B).
 
     Raises:
         InvalidURLError: Si la URL no es un enlace HTTP/HTTPS válido.
@@ -78,8 +80,16 @@ async def analyze_url(url: str, *, client: PhishtankClient | None = None) -> Ana
         _check_reputation(phishtank_client, parsed.normalized_url),
     )
 
-    scoring = score_results(results, phishtank_match=reputation.is_match)
-    evidences = build_evidences(results, phishtank_match=reputation.is_match)
+    scoring = score_results(
+        results,
+        phishtank_match=reputation.is_match,
+        phishtank_unverified=reputation.is_unverified,
+    )
+    evidences = build_evidences(
+        results,
+        phishtank_match=reputation.is_match,
+        phishtank_unverified=reputation.is_unverified,
+    )
     execution_time_ms = round((perf_counter() - started_at) * 1000, 2)
 
     return AnalyzeResponse(

@@ -96,9 +96,18 @@ class TestPhishtankCache:
         assert cache.get("hash") is None
         cache.set("hash", True)
         assert cache.get("hash") is True
+        assert cache.get_flags("hash") == (True, False)
 
         cache.clear()
         assert cache.get("hash") is None
+
+    def test_cachea_el_estado_no_verificado(self) -> None:
+        cache = PhishtankCache(ttl_seconds=60)
+
+        cache.set("hash", False, True)
+
+        assert cache.get("hash") is False
+        assert cache.get_flags("hash") == (False, True)
 
     def test_usa_el_ttl_configurado_por_defecto(self) -> None:
         cache = PhishtankCache()
@@ -110,20 +119,24 @@ class TestPhishtankCache:
         cache.set("hash", False)
 
         assert cache.get("hash") is False
+        assert cache.get_flags("hash") == (False, False)
         assert cache.get("otro") is None
+        assert cache.get_flags("otro") is None
 
 
 class TestPhishtankCacheInstanciaUnica:
     """Inyección y gestión del singleton de caché."""
 
     def test_acepta_una_cache_inyectada(self) -> None:
+        from app.cache.phishtank_cache import CachedReputation
         from app.cache.ttl_lru import TTLLRUCache
 
-        interna: TTLLRUCache[str, bool] = TTLLRUCache(ttl_seconds=60)
+        interna: TTLLRUCache[str, CachedReputation] = TTLLRUCache(ttl_seconds=60)
         cache = PhishtankCache(cache=interna)
         cache.set("hash", True)
 
         assert cache.get("hash") is True
+        assert cache.get_flags("hash") == (True, False)
         assert len(cache) == 1
 
     def test_instancia_unica_y_reset(self) -> None:

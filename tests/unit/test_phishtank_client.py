@@ -57,7 +57,7 @@ class TestPhishtankClientExito:
         assert result.status is PhishtankStatus.AVAILABLE
 
     @respx.mock
-    async def test_registro_invalido_no_es_coincidencia(self) -> None:
+    async def test_registro_invalido_es_reporte_no_verificado(self) -> None:
         respx.post(API_URL).mock(
             return_value=httpx.Response(
                 200,
@@ -68,7 +68,22 @@ class TestPhishtankClientExito:
         result = await _cliente().check_url(URL_ANALIZADA)
 
         assert result.is_match is False
+        assert result.is_unverified is True
         assert result.status is PhishtankStatus.AVAILABLE
+
+    @respx.mock
+    async def test_registro_unknown_es_reporte_no_verificado(self) -> None:
+        respx.post(API_URL).mock(
+            return_value=httpx.Response(
+                200,
+                json={"results": {"in_database": True, "valid": "Unknown"}},
+            )
+        )
+
+        result = await _cliente().check_url(URL_ANALIZADA)
+
+        assert result.is_match is False
+        assert result.is_unverified is True
 
     @respx.mock
     async def test_envia_url_y_formato_sin_claves(self) -> None:
@@ -160,6 +175,25 @@ class TestPhishtankClientCache:
         assert ruta.call_count == 2
 
     @respx.mock
+    async def test_cache_conserva_el_estado_no_verificado(self) -> None:
+        ruta = respx.post(API_URL).mock(
+            return_value=httpx.Response(
+                200,
+                json={"results": {"in_database": True, "valid": False}},
+            )
+        )
+        cliente = _cliente()
+
+        primera = await cliente.check_url(URL_ANALIZADA)
+        segunda = await cliente.check_url(URL_ANALIZADA)
+
+        assert primera.is_unverified is True
+        assert segunda.is_unverified is True
+        assert segunda.is_match is False
+        assert segunda.status is PhishtankStatus.CACHED
+        assert ruta.call_count == 1
+
+    @respx.mock
     async def test_clave_de_cache_no_expone_la_url(self) -> None:
         clave = PhishtankClient.cache_key(URL_ANALIZADA)
 
@@ -200,6 +234,38 @@ class TestPhishtankClientHelpers:
     def test_rechaza_payload_sin_results(self) -> None:
         with pytest.raises(ValueError, match="results"):
             PhishtankClient._is_match({"meta": {"status": "ok"}})
+
+    @pytest.mark.parametrize(
+        ("valid", "is_match", "is_unverified"),
+        [
+            (True, True, False),
+            ("true", True, False),
+            ("Valid", True, False),
+            (1, True, False),
+            (False, False, True),
+            ("false", False, True),
+            ("Unknown", False, True),
+            ("pending", False, True),
+            (None, False, True),
+            (0, False, True),
+        ],
+    )
+    def test_parse_flags_de_valid(self, valid: object, is_match: bool, is_unverified: bool) -> None:
+        payload = {"results": {"in_database": True, "valid": valid}}
+
+        assert PhishtankClient._parse_flags(payload) == (is_match, is_unverified)
+
+    @pytest.mark.parametrize("valid", [True, False, "Unknown"])
+    def test_fuera_de_base_de_datos_no_hay_flags(self, valid: object) -> None:
+        payload = {"results": {"in_database": False, "valid": valid}}
+
+        assert PhishtankClient._parse_flags(payload) == (False, False)
+
+    def test_valid_ausente_se_asume_confirmado(self) -> None:
+        """Compatibilidad con respuestas antiguas que omitían ``valid``."""
+        payload = {"results": {"in_database": True}}
+
+        assert PhishtankClient._parse_flags(payload) == (True, False)
 
     def test_configuracion_por_defecto(self) -> None:
         cliente = PhishtankClient(cache=PhishtankCache(ttl_seconds=60))
