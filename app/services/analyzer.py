@@ -16,6 +16,7 @@ from app.clients.phishtank import (
     PhishtankResult,
     get_phishtank_client,
 )
+from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.engine.models import ParsedURL, RuleResult
 from app.engine.pipeline import run_rules
@@ -40,10 +41,17 @@ async def _run_lexical(parsed: ParsedURL) -> list[RuleResult]:
 async def _check_reputation(client: PhishtankClient, url: str) -> PhishtankResult:
     """Consulta la reputación degradando a ``unavailable`` ante cualquier fallo.
 
+    Si ``PHISHTANK_ENABLED`` es ``False`` la consulta externa se omite por
+    completo y se responde ``unavailable``; así los benchmarks locales y los
+    despliegues sin reputación no abren conexiones (RNF-101, RNF-104).
+
     El cliente ya captura los errores de red previstos (RF-404). Esta guarda
     adicional garantiza que ni siquiera un fallo inesperado del cliente pueda
     propagarse como HTTP 500 (RNF-104).
     """
+    if not get_settings().PHISHTANK_ENABLED:
+        return PhishtankResult(is_match=False, status=PhishtankStatus.UNAVAILABLE)
+
     try:
         return await client.check_url(url)
     except Exception as exc:  # degradación elegante obligatoria (RNF-104)

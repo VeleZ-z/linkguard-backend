@@ -1,0 +1,6 @@
+# Dependencias EXCLUSIVAS del laboratorio de accuracy (H5-T02/T09).
+# NO se instalan en producción: requirements.txt no las incluye (RF-605).
+# La inferencia del modelo en producción es Python puro (sin NumPy/sklearn).
+scikit-learn>=1.5.0,<2.0.0
+numpy>=1.26.0,<3.0.0
+scipy>=1.13.0,<2.0.0

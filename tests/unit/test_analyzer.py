@@ -6,6 +6,7 @@ contacta PhishTank (RNF-101).
 
 from __future__ import annotations
 
+import pytest
 from app.clients.phishtank import PhishtankResult
 from app.schemas import PhishtankStatus, RiskLevel
 from app.services.analyzer import analyze_url
@@ -80,6 +81,29 @@ class TestAnalyzeUrlReputacion:
 
         assert response.phishtank_status is PhishtankStatus.CACHED
         assert response.risk_level is RiskLevel.ALTO
+
+
+class TestPhishtankDeshabilitado:
+    """PHISHTANK_ENABLED=false omite la consulta externa (H5-T03)."""
+
+    async def test_no_consulta_el_cliente(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from app.core.config import get_settings
+
+        monkeypatch.setenv("PHISHTANK_ENABLED", "false")
+        get_settings.cache_clear()
+        try:
+            cliente = _ClienteFalso(
+                PhishtankResult(is_match=True, status=PhishtankStatus.AVAILABLE)
+            )
+
+            response = await analyze_url(URL_LIMPIA, client=cliente)
+
+            assert cliente.urls == []
+            assert response.phishtank_status is PhishtankStatus.UNAVAILABLE
+            assert response.score == 0
+            assert response.risk_level is RiskLevel.BAJO
+        finally:
+            get_settings.cache_clear()
 
 
 class TestAnalyzeUrlContrato:

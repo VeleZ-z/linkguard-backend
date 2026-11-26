@@ -25,11 +25,10 @@ import math
 from collections import Counter
 from typing import Final
 
-from publicsuffix2 import get_sld
-
 from app.engine.models import ParsedURL, RuleResult
 from app.engine.rules.base import build_rule_result
 from app.engine.weights import WEIGHTS
+from app.normalization.psl import registrable_domain as _registrable_domain
 
 RULE_ID: Final[str] = "F04_SHANNON_ENTROPY"
 POINTS: Final[int] = WEIGHTS["F04"]
@@ -77,7 +76,7 @@ def _split_registrable(host: str) -> tuple[list[str], str]:
     if not normalized:
         return [], ""
     try:
-        main_domain = get_sld(normalized) or normalized
+        main_domain = _registrable_domain(normalized) or normalized
     except (TypeError, ValueError):  # pragma: no cover - defensa ante PSL inválida
         main_domain = normalized
     if normalized == main_domain:

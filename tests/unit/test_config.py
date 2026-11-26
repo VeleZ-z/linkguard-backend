@@ -31,6 +31,7 @@ class TestSettingsDefaults:
         assert settings.CORS_ORIGINS == ["http://localhost:5173"]
         assert settings.PHISHTANK_TIMEOUT == 4.0
         assert settings.PHISHTANK_TTL_SECONDS == 7200
+        assert settings.PHISHTANK_ENABLED is True
         assert settings.RATE_LIMIT_PER_MINUTE == 30
         assert settings.PHISHTANK_API_URL == "https://checkurl.phishtank.com/checkurl/"
 
@@ -129,6 +130,39 @@ class TestPhishtankTtlSeconds:
     @pytest.mark.parametrize("value", ["0", "-1", "abc"])
     def test_valor_invalido(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
         monkeypatch.setenv("PHISHTANK_TTL_SECONDS", value)
+        with pytest.raises(ValidationError):
+            Settings()
+
+
+class TestPhishtankEnabled:
+    """Campo PHISHTANK_ENABLED (booleano, por defecto activo)."""
+
+    def test_valor_por_defecto(self) -> None:
+        assert Settings().PHISHTANK_ENABLED is True
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [
+            ("true", True),
+            ("True", True),
+            ("1", True),
+            ("false", False),
+            ("False", False),
+            ("0", False),
+        ],
+    )
+    def test_valores_booleanos(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        value: str,
+        expected: bool,
+    ) -> None:
+        monkeypatch.setenv("PHISHTANK_ENABLED", value)
+        assert Settings().PHISHTANK_ENABLED is expected
+
+    @pytest.mark.parametrize("value", ["quizas", ""])
+    def test_valor_invalido(self, monkeypatch: pytest.MonkeyPatch, value: str) -> None:
+        monkeypatch.setenv("PHISHTANK_ENABLED", value)
         with pytest.raises(ValidationError):
             Settings()
 

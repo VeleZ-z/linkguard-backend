@@ -8,11 +8,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from publicsuffix2 import get_sld
-
 from app.engine.models import ParsedURL, RuleResult
 from app.engine.rules.base import build_rule_result
 from app.engine.weights import WEIGHTS
+from app.normalization.psl import registrable_domain
 
 RULE_ID: Final[str] = "F03_MULTIPLE_SUBDOMAINS"
 POINTS: Final[int] = WEIGHTS["F03"]
@@ -27,18 +26,23 @@ DESCRIPTION: Final[str] = (
 )
 
 
+def _is_ip_like(host: str) -> bool:
+    """Indica si ``host`` parece una dirección IP (solo dígitos y puntos)."""
+    parts = host.split(".")
+    return all(p.isdigit() for p in parts if p)
+
+
 def _count_subdomains(host: str) -> int:
-    """Cuenta las etiquetas previas al dominio registrable (eTLD+1)."""
-    normalized = host.strip().rstrip(".").lower()
-    if not normalized:
+    """Cuenta las etiquetas de subdominio usando la PSL vendorizada."""
+    host = host.strip().rstrip(".").lower()
+    if not host:
         return 0
-    try:
-        main_domain = get_sld(normalized) or normalized
-    except (TypeError, ValueError):
-        main_domain = normalized
-    if normalized == main_domain:
+    if _is_ip_like(host):
         return 0
-    return max(0, len(normalized.split(".")) - len(main_domain.split(".")))
+    rsd = registrable_domain(host)
+    host_labels = host.split(".")
+    rsd_labels = rsd.split(".")
+    return max(0, len(host_labels) - len(rsd_labels))
 
 
 def evaluate_multiple_subdomains(parsed_url: ParsedURL) -> RuleResult:

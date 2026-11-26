@@ -61,6 +61,14 @@ class Settings(BaseSettings):
         gt=0,
         description="TTL de la caché LRU de PhishTank, en segundos (RF-403).",
     )
+    PHISHTANK_ENABLED: bool = Field(
+        default=True,
+        description=(
+            "Habilita la consulta de reputación a PhishTank. Al deshabilitarla, "
+            "el análisis léxico se entrega con phishtank_status='unavailable' "
+            "sin abrir conexiones (útil para benchmarks locales, RNF-101)."
+        ),
+    )
     RATE_LIMIT_PER_MINUTE: int = Field(
         default=30,
         gt=0,

@@ -12,10 +12,9 @@ import ipaddress
 import re
 from urllib.parse import unquote, urlparse, urlunparse
 
-from publicsuffix2 import get_sld
-
 from app.core.errors import InvalidURLError, URLTooLongError
 from app.engine.models import ParsedURL
+from app.normalization.psl import registrable_domain as _registrable_domain
 
 #: Longitud máxima procesable de una URL, medida tras la sanitización (RF-105).
 MAX_URL_LENGTH: int = 4096
@@ -134,7 +133,7 @@ def normalize(raw: str) -> ParsedURL:
     main_domain: str | None = None
     subdomains: list[str] = []
     if not is_ip:
-        main_domain = get_sld(host) or host
+        main_domain = _registrable_domain(host)
         subdomains = _split_domains(host, main_domain)
 
     normalized_url = urlunparse((scheme, netloc, path, params, query, fragment))

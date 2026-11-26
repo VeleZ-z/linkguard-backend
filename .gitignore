@@ -16,6 +16,9 @@ build/
 dist/
 .eggs/
 
+# Datos del laboratorio de accuracy (H5-T02)
+data/
+
 # Herramientas de calidad y pruebas
 .pytest_cache/
 .ruff_cache/
