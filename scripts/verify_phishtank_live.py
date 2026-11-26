@@ -124,8 +124,35 @@ async def main() -> int:
     errores: Counter[str] = Counter()
     rate_limits = 0
 
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as http:
-        urls = await _descargar_muestra(http)
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as http:
+            urls = await _descargar_muestra(http)
+    except httpx.HTTPStatusError as exc:
+        # El feed público está limitado por IP (429). No es un fallo del motor:
+        # se reporta como no verificable, sin traceback ni falsa confirmación.
+        print(
+            json.dumps(
+                {
+                    "estado": "BLOQUEADO",
+                    "motivo": f"feed público devolvió HTTP {exc.response.status_code}",
+                    "hipotesis_c6": "NO VERIFICADA: el feed de PhishTank está limitado por IP",
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
+    except httpx.HTTPError as exc:
+        print(
+            json.dumps(
+                {
+                    "estado": "BLOQUEADO",
+                    "motivo": f"error de red leyendo el feed: {type(exc).__name__}",
+                    "hipotesis_c6": "NO VERIFICADA: no fue posible descargar la muestra",
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
 
     for url in urls:
         variantes = cliente.build_variants(url)

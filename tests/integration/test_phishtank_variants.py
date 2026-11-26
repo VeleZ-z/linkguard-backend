@@ -252,3 +252,26 @@ class TestPresupuestoYDegradacion:
         salida = capsys.readouterr().out
         assert codigo == 0
         assert json.loads(salida)["estado"] == "OMITIDO"
+
+    def test_script_live_bloqueado_por_rate_limit(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Un 429 del feed se reporta como NO VERIFICADA, sin traceback."""
+
+        modulo = importlib.import_module("scripts.verify_phishtank_live")
+        monkeypatch.setenv("LINKGUARD_LIVE_TESTS", "1")
+
+        async def _feed_limitado(_http: httpx.AsyncClient) -> list[str]:
+            peticion = httpx.Request("GET", modulo.FEED_URL)
+            raise httpx.HTTPStatusError(
+                "429", request=peticion, response=httpx.Response(429, request=peticion)
+            )
+
+        monkeypatch.setattr(modulo, "_descargar_muestra", _feed_limitado)
+
+        codigo = asyncio.run(modulo.main())
+        resultado = json.loads(capsys.readouterr().out)
+
+        assert codigo == 0
+        assert resultado["estado"] == "BLOQUEADO"
+        assert "NO VERIFICADA" in resultado["hipotesis_c6"]

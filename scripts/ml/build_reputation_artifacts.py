@@ -14,7 +14,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import re
 import subprocess
 import sys
 import time
@@ -128,15 +127,22 @@ def _is_public_suffix(domain: str, psl_suffixes: set[str]) -> bool:
 
 
 def _is_abusable(domain: str, abusable_patterns: list[str]) -> bool:
-    """Devuelve True si el dominio coincide con algún patrón abusable."""
-    for pattern in abusable_patterns:
-        if "*" in pattern:
-            pat = pattern.replace(".", r"\.").replace("*", ".*")
-            if re.search(pat, domain):
-                return True
-        else:
-            if domain == pattern or domain.endswith("." + pattern):
-                return True
+    """Devuelve True si el dominio coincide con algún patrón abusable.
+
+    El emparejamiento es lineal y anclado por etiqueta, igual que en
+    :func:`app.engine.data.abusable_services._matches_abusable`. La auditoría
+    H5-T16 marcó la antigua rama con comodines como riesgo latente en CI:
+    construir ``.*`` desde un patrón y usar ``re.search`` sin anclar permite
+    retroceso cuadrático con dominios largos. Un comodín ``*.`` significa
+    «cualquier subdominio», nunca una secuencia libre de caracteres.
+    """
+    valor = domain.lower()
+    for patron in abusable_patterns:
+        base = patron.lower()
+        if base.startswith("*."):
+            base = base[2:]
+        if base and (valor == base or valor.endswith("." + base)):
+            return True
     return False
 
 

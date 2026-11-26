@@ -122,3 +122,25 @@ def test_live_requiere_variable_de_entorno(
     monkeypatch.delenv(modulo.LIVE_ENV, raising=False)
     monkeypatch.setattr(modulo, "BOOTSTRAP_PATH", tmp_path / "nunca-existe.json")
     assert modulo.cargar_servidores(None) == modulo.FALLBACK_SERVERS
+
+
+def test_offline_no_confunde_con_tld_sin_servidor(modulo: Any) -> None:
+    """Sin cliente el estado es `no_consultado`, no `sin_servidor`."""
+    servidores = {"com": "https://rdap.example/"}
+    consulta = modulo.consultar_edad(None, "ejemplo.com", servidores, {}, 0.0, 1.0)
+
+    assert consulta.estado == "no_consultado"
+    assert consulta.dias is None
+
+
+def test_ci_no_invoca_trafico_rdap() -> None:
+    """Ningún workflow de CI habilita el modo live del arnés (RNF-101)."""
+    workflows = ROOT / ".github" / "workflows"
+    archivos = list(workflows.glob("*.yml")) + list(workflows.glob("*.yaml"))
+    assert archivos, "No hay workflows que inspeccionar"
+
+    for archivo in archivos:
+        contenido = archivo.read_text(encoding="utf-8")
+        assert "LINKGUARD_RDAP_LIVE" not in contenido
+        assert "--live" not in contenido
+        assert "measure_rdap_gain" not in contenido

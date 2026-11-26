@@ -158,8 +158,13 @@ def consultar_edad(
 
     tld = dominio.rsplit(".", 1)[-1].lower()
     base = servidores.get(tld)
-    if cliente is None or not base:
-        return EdadDominio(dominio, None, "sin_servidor", 0.0)
+    if cliente is None:
+        # Sin cliente no hubo consulta: no debe confundirse con un TLD sin servidor.
+        return EdadDominio(dominio, None, "no_consultado", 0.0)
+    if not base:
+        estado_sin_servidor = EdadDominio(dominio, None, "sin_servidor", 0.0)
+        cache[dominio] = {"dias": None, "estado": "sin_servidor", "latencia_ms": 0.0}
+        return estado_sin_servidor
 
     url = f"{base}/domain/{dominio}"
     estado = "unavailable"
@@ -303,8 +308,9 @@ def generar_informe(datos: dict[str, Any], ruta: Path) -> None:
         f"| Respuestas con fecha de registro | {m['con_fecha']} |",
         f"| Dominios nuevos (< 30 días) | {m['nuevos']} |",
         f"| Nuevos positivos / negativos | {m['nuevos_positivos']} / {m['nuevos_negativos']} |",
-        f"| Sin servidor / no registrados / errores | "
-        f"{m['sin_servidor']} / {m['no_registrados']} / {m['errores']} |",
+        f"| Sin servidor / no registrados / errores / no consultados (offline) | "
+        f"{m['sin_servidor']} / {m['no_registrados']} / {m['errores']} / "
+        f"{m['no_consultados']} |",
         "",
         "## Resultado",
         "",
@@ -504,9 +510,10 @@ def main(argv: list[str] | None = None) -> int:
             "sin_servidor": sum(info.estado == "sin_servidor" for info in edades.values()),
             "no_registrados": sum(info.estado == "not_registered" for info in edades.values()),
             "errores": sum(
-                info.estado not in {"ok", "sin_servidor", "not_registered"}
+                info.estado not in {"ok", "sin_servidor", "not_registered", "no_consultado"}
                 for info in edades.values()
             ),
+            "no_consultados": sum(info.estado == "no_consultado" for info in edades.values()),
             "recall_base": recall_base,
             "recall_rdap": recall_rdap,
             "p95_local_ms": round(ev.percentile([e.v3_ms for e in evaluadas], 0.95), 3),
