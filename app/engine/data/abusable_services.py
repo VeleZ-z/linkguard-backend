@@ -30,6 +30,7 @@ def _matches_abusable(host_or_url: str) -> bool:
                 return True
     return False
 
+
 ABUSABLE_SERVICES: tuple[str, ...] = (
     # Dominios completos de plataformas multi-inquilino/hosting (a)
     "docs.google.com",
@@ -64,6 +65,9 @@ ABUSABLE_SERVICES: tuple[str, ...] = (
     # Hosts (b)
     "translate.google.com",
     "script.google.com",
+    "mq.mbd.baidu.com",
+    "s.yam.com",
+    "ct.sendgrid.net",
     # host+ruta (c)
     "linkedin.com/slink",
     "dropbox.com/s/",

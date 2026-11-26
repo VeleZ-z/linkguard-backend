@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import csv
 import sys
+import time
 from collections import Counter
+from functools import cache
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -32,8 +34,62 @@ TSV_OUT: Path = ROOT / "docs" / "reports" / "abusable-candidates.tsv"
 THRESHOLD: int = 20
 
 
-def _load_jpcert_urls() -> Counter[str]:
-    """Carga URLs de JPCERT si el directorio existe."""
+# Cache para registrable_domain: evita recomputar el mismo dominio repetidamente
+@cache
+def _cached_registrable_domain(netloc: str) -> str | None:
+    """Versión cached de registrable_domain."""
+    return registrable_domain(netloc)
+
+
+def _load_allowlist_domains() -> set[str]:
+    """Carga los dominios de la allowlist como set para lookup O(1)."""
+    domains: set[str] = set()
+    if not ALLOWLIST.exists():
+        return domains
+    with ALLOWLIST.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip().lower()
+            if line:
+                domains.add(line)
+    return domains
+
+
+def _load_phishdb_counts(allowlist: set[str]) -> Counter[str]:
+    """Cuenta URLs de phishing por dominio registrable en Phishing.Database.
+
+    Itera una sola vez en streaming y solo cuenta dominios que estén en la allowlist.
+    """
+    counts: Counter[str] = Counter()
+    if not PHISHDB_LINKS.exists():
+        return counts
+    with PHISHDB_LINKS.open("r", encoding="utf-8", errors="ignore") as f:
+        for i, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line or not line.startswith(("http://", "https://", "ftp://")):
+                continue
+            try:
+                parsed = urlparse(line)
+                netloc = parsed.netloc
+                if not netloc:
+                    continue
+                # Extraer host una sola vez
+                host = netloc.lower()
+                rd = _cached_registrable_domain(host)
+                if rd and rd in allowlist:
+                    counts[rd] += 1
+            except Exception:
+                pass
+            # Progreso cada 100,000 líneas
+            if i % 100_000 == 0:
+                pass  # Could log progress here
+    return counts
+
+
+def _load_jpcert_counts(allowlist: set[str]) -> Counter[str]:
+    """Cuenta URLs de JPCERT por dominio registrable, modo streaming.
+
+    Solo procesa si el directorio JPCERT existe y cuenta dominios en allowlist.
+    """
     counts: Counter[str] = Counter()
     if not JPCERT_DIR.exists():
         return counts
@@ -62,8 +118,13 @@ def _load_jpcert_urls() -> Counter[str]:
                         if not url:
                             continue
                         try:
-                            rd = registrable_domain(urlparse(url).netloc or url)
-                            if rd:
+                            parsed = urlparse(url)
+                            netloc = parsed.netloc
+                            if not netloc:
+                                continue
+                            host = netloc.lower()
+                            rd = _cached_registrable_domain(host)
+                            if rd and rd in allowlist:
                                 counts[rd] += 1
                         except Exception:
                             pass
@@ -72,62 +133,17 @@ def _load_jpcert_urls() -> Counter[str]:
     return counts
 
 
-def _load_phishdb_counts() -> Counter[str]:
-    """Cuenta URLs de phishing por dominio registrable en Phishing.Database."""
-    counts: Counter[str] = Counter()
-    if not PHISHDB_LINKS.exists():
-        return counts
-    with PHISHDB_LINKS.open("r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            line = line.strip()
-            if not line or not line.startswith(("http://", "https://", "ftp://")):
-                continue
-            try:
-                parsed = urlparse(line)
-                netloc = parsed.netloc
-                if not netloc:
-                    continue
-                rd = registrable_domain(netloc)
-                if rd:
-                    counts[rd] += 1
-            except Exception:
-                pass
-    return counts
-
-
-def _load_allowlist_domains() -> set[str]:
-    """Carga los dominios de la allowlist."""
-    domains: set[str] = set()
-    if not ALLOWLIST.exists():
-        return domains
-    with ALLOWLIST.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip().lower()
-            if line:
-                domains.add(line)
-    return domains
-
-
-def _load_seed_tsv() -> dict[str, dict[str, str]]:
-    """Carga el TSV semilla como diccionario claveado por dominio."""
-    seed: dict[str, dict[str, str]] = {}
-    if not TSV_SEED.exists():
-        return seed
-    with TSV_SEED.open("r", encoding="utf-8") as f:
-        reader = csv.DictReader(f, delimiter="\t")
-        for row in reader:
-            dom = row.get("dominio_registrable", "").strip().lower()
-            if dom:
-                seed[dom] = row
-    return seed
-
-
 def main() -> None:
     """Punto de entrada principal."""
-    jpcert_counts = _load_jpcert_urls()
-    phishdb_counts = _load_phishdb_counts()
+    start_total = time.time()
+
+    # Cargar allowlist como set para lookup O(1)
     allowlist_domains = _load_allowlist_domains()
-    seed = _load_seed_tsv()
+    print(f"✔ Allowlist cargada: {len(allowlist_domains)} dominios")
+
+    # Cargar conteos en streaming, solo dominios en allowlist
+    phishdb_counts = _load_phishdb_counts(allowlist_domains)
+    jpcert_counts = _load_jpcert_counts(allowlist_domains)
 
     # Combinar conteos: phishdb + jpcert (openphish vacío en build offline)
     combined: Counter[str] = Counter()
@@ -135,6 +151,16 @@ def main() -> None:
         combined[dom] += cnt
     for dom, cnt in jpcert_counts.items():
         combined[dom] += cnt
+
+    # Cargar TSV semilla
+    seed: dict[str, dict[str, str]] = {}
+    if TSV_SEED.exists():
+        with TSV_SEED.open("r", encoding="utf-8") as f:
+            reader = csv.DictReader(f, delimiter="\t")
+            for row in reader:
+                dom = row.get("dominio_registrable", "").strip().lower()
+                if dom:
+                    seed[dom] = row
 
     # Filtrar solo dominios de la allowlist con >= THRESHOLD
     candidates: list[dict[str, str]] = []
@@ -171,8 +197,10 @@ def main() -> None:
         for row in candidates:
             writer.writerow(row)
 
+    elapsed_total = time.time() - start_total
     print(f"✔ mine_abusable: {len(candidates)} candidatos con >={THRESHOLD} URLs")
     print(f"✔ Escrito en {TSV_OUT}")
+    print(f"⏱️  Tiempo total: {elapsed_total:.1f} s")
 
 
 if __name__ == "__main__":
