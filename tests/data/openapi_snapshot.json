@@ -1,0 +1,267 @@
+{
+  "components": {
+    "schemas": {
+      "AnalyzeRequest": {
+        "description": "Solicitud de análisis de una URL ingresada manualmente por el usuario.",
+        "properties": {
+          "url": {
+            "description": "URL a evaluar, entre 3 y 4096 caracteres.",
+            "maxLength": 4096,
+            "minLength": 3,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "AnalyzeRequest",
+        "type": "object"
+      },
+      "AnalyzeResponse": {
+        "description": "Respuesta del análisis con puntaje, nivel, evidencias y recomendación.",
+        "properties": {
+          "evidences": {
+            "description": "Desglose de las reglas que aportaron puntos al puntaje (RF-303).",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceDTO"
+            },
+            "title": "Evidences",
+            "type": "array"
+          },
+          "execution_time_ms": {
+            "description": "Tiempo total de ejecución del análisis, en milisegundos.",
+            "minimum": 0.0,
+            "title": "Execution Time Ms",
+            "type": "number"
+          },
+          "normalized_url": {
+            "description": "URL resultante del pipeline de normalización sintáctica.",
+            "title": "Normalized Url",
+            "type": "string"
+          },
+          "phishtank_status": {
+            "$ref": "#/components/schemas/PhishtankStatus"
+          },
+          "recommendation": {
+            "description": "Recomendación operativa asociada al nivel de riesgo (RF-304).",
+            "title": "Recommendation",
+            "type": "string"
+          },
+          "risk_level": {
+            "$ref": "#/components/schemas/RiskLevel",
+            "description": "Nivel de riesgo derivado del puntaje (RF-302)."
+          },
+          "score": {
+            "description": "Puntaje de riesgo ponderado, acotado entre 0 y 100 (RF-301).",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "url_analyzed": {
+            "description": "URL original tal como fue recibida del cliente.",
+            "title": "Url Analyzed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url_analyzed",
+          "normalized_url",
+          "score",
+          "risk_level",
+          "recommendation",
+          "evidences",
+          "phishtank_status",
+          "execution_time_ms"
+        ],
+        "title": "AnalyzeResponse",
+        "type": "object"
+      },
+      "EvidenceDTO": {
+        "description": "Evidencia individual que explica los puntos aportados por una regla.",
+        "properties": {
+          "description": {
+            "description": "Explicación en español neutro comprensible para el usuario final.",
+            "title": "Description",
+            "type": "string"
+          },
+          "points": {
+            "description": "Puntos sumados al puntaje de riesgo por esta evidencia.",
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "integer"
+          },
+          "rule_id": {
+            "description": "Identificador de la regla que se activó (por ejemplo, F02_DIRECT_IP).",
+            "title": "Rule Id",
+            "type": "string"
+          },
+          "title": {
+            "description": "Título técnico legible de la anomalía detectada.",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "points",
+          "title",
+          "description"
+        ],
+        "title": "EvidenceDTO",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "PhishtankStatus": {
+        "description": "Estado de la consulta de reputación externa (RF-404).",
+        "enum": [
+          "available",
+          "timeout",
+          "unavailable",
+          "cached"
+        ],
+        "title": "PhishtankStatus",
+        "type": "string"
+      },
+      "RiskLevel": {
+        "description": "Nivel de riesgo asignado a la URL analizada (RF-302).",
+        "enum": [
+          "Bajo",
+          "Medio",
+          "Alto"
+        ],
+        "title": "RiskLevel",
+        "type": "string"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Servicio de evaluación sintáctico-léxica del riesgo de phishing en URLs. Análisis local sin conexiones al enlace evaluado (RNF-101).",
+    "title": "LinkGuard API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/analyze": {
+      "post": {
+        "description": "Analiza la URL y devuelve el contrato §6 completo.\n\nArgs:\n    request: Petición HTTP (usada por el limitador y para obtener la IP).\n    payload: DTO con la URL a evaluar (3–4096 caracteres).\n\nReturns:\n    ``AnalyzeResponse`` con puntaje, nivel, evidencias, recomendación,\n    ``phishtank_status`` y tiempo de ejecución.\n\nRaises:\n    InvalidURLError: Si la entrada no es un enlace HTTP/HTTPS válido.\n    URLTooLongError: Si tras sanitizar supera los 4096 caracteres.",
+        "operationId": "analyze_endpoint_api_v1_analyze_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evalúa el riesgo sintáctico-léxico de una URL",
+        "tags": [
+          "analyze"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Responde 200 con la identidad y la marca temporal del servicio.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Estado de salud del servicio",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}

@@ -79,6 +79,22 @@ class Settings(BaseSettings):
         default="https://checkurl.phishtank.com/checkurl/",
         description="Endpoint público de consulta de PhishTank.",
     )
+    PHISHTANK_APP_KEY: str | None = Field(
+        default=None,
+        description=(
+            "Clave de aplicación opcional de PhishTank (RF-801). Se envía solo "
+            "como campo del cuerpo de la consulta; nunca se registra en logs."
+        ),
+    )
+    ENABLE_V3_SCORING: bool = Field(
+        default=False,
+        description=(
+            "Activa el scoring normativo v3 en el orquestador (RF-701…806). "
+            "Desactivado por defecto hasta la guardia de regresión H5-T15: así "
+            "las suites v2 herederas conservan sus expectativas y el modelo se "
+            "integra sin alterar el contrato."
+        ),
+    )
     MODEL_THRESHOLD_MEDIO: float | None = Field(
         default=None,
         ge=0.0,
@@ -127,6 +143,14 @@ class Settings(BaseSettings):
                     "CORS_ORIGINS no admite comodines; declare los orígenes "
                     "autorizados de forma explícita"
                 )
+        return value
+
+    @field_validator("PHISHTANK_APP_KEY", mode="before")
+    @classmethod
+    def _empty_app_key_is_none(cls, value: object) -> object:
+        """Interpreta una clave vacía como «sin clave» (RF-801)."""
+        if isinstance(value, str) and not value.strip():
+            return None
         return value
 
     @field_validator("MODEL_THRESHOLD_MEDIO", "MODEL_THRESHOLD_ALTO", mode="before")
