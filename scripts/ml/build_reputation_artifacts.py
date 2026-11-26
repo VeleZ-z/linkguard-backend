@@ -26,7 +26,9 @@ from urllib.parse import urlparse
 ROOT: Path = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from app.engine.data.url_shorteners import URL_SHORTENERS  # noqa: E402
 from app.normalization.psl import PSL  # noqa: E402
+from app.reputation.canonical import canonical_url_key  # noqa: E402
 
 # Rutas relativas al proyecto.
 DATA_DIR: Path = ROOT / "app" / "engine" / "data"
@@ -119,16 +121,43 @@ def _is_abusable(domain: str, abusable_patterns: list[str]) -> bool:
     return False
 
 
+def _is_shortener_or_ddns(domain: str) -> bool:
+    """Devuelve True si el dominio es un acortador (F05) o servicio DDNS."""
+    d = domain.lower()
+    # Acortadores conocidos (lista F05): dominio exacto o subdominio
+    for s in URL_SHORTENERS:
+        if d == s or d.endswith("." + s):
+            return True
+    # Servicios DDNS dinámicos
+    ddns_patterns = [
+        "duckdns.org",
+        "no-ip.org",
+        "ddns.net",
+        "dynu.net",
+        "dnsomatic.com",
+        "freedynamicdns.org",
+        "hopto.org",
+        "ddnsfree.com",
+        "static.cl",
+        "servebeer.com",
+    ]
+    for p in ddns_patterns:
+        if d == p or d.endswith("." + p):
+            return True
+    return False
+
+
 def _build_allowlist(
     top100k_domains: list[str], psl_suffixes: set[str], abusable_patterns: list[str]
 ) -> tuple[set[str], dict[str, Any]]:
-    """Construye la allowlist: dominios registrables del top-100k, sin sufijos públicos ni abusables.
+    """Construye la allowlist: dominios registrables del top-100k, sin sufijos públicos, abusables, acortadores ni DDNS.
 
     Retorna (allowlist, stats) donde stats tiene conteos y muestras de excluidos.
     """
     allowlist: set[str] = set()
     psl_excluded_list: list[str] = []
     abusable_excluded_list: list[str] = []
+    shortener_ddns_excluded_list: list[str] = []
 
     for domain in top100k_domains:
         if _is_public_suffix(domain, psl_suffixes):
@@ -137,15 +166,20 @@ def _build_allowlist(
         if _is_abusable(domain.lower(), abusable_patterns):
             abusable_excluded_list.append(domain.lower())
             continue
+        if _is_shortener_or_ddns(domain.lower()):
+            shortener_ddns_excluded_list.append(domain.lower())
+            continue
         allowlist.add(domain.lower())
 
     stats: dict[str, Any] = {
         "total_read": len(top100k_domains),
         "psl_excluded": len(psl_excluded_list),
         "abusable_excluded": len(abusable_excluded_list),
+        "shortener_ddns_excluded": len(shortener_ddns_excluded_list),
         "final_count": len(allowlist),
         "psl_excluded_first10": psl_excluded_list[:10],
         "abusable_excluded_first10": abusable_excluded_list[:10],
+        "shortener_ddns_excluded_first10": shortener_ddns_excluded_list[:10],
         "allowlist_first10": sorted(allowlist)[:10],
     }
     return allowlist, stats
@@ -156,8 +190,18 @@ def _build_allowlist(
 # ---------------------------------------------------------------------------
 
 
-def _write_abusable_services(path: Path) -> None:
-    """Escribe app/engine/data/abusable_services.py con la semilla RF-503."""
+def _write_abusable_services(path: Path, allowlist_hosts: set[str]) -> tuple[list[str], list[str]]:
+    """Escribe app/engine/data/abusable_services.py con la semilla RF-503.
+
+    Reglas de emparejamiento:
+      - Patrón sin "/": coincide si el host es igual al patrón o si el host
+        termina con "." + patrón (sufijo en límite de etiqueta).
+        Ejemplo: "web.app" coincide con "x.web.app" pero NO con "evilweb.app".
+      - Patrón con "/": coincide si el host base (host == base o host termina
+        en "." + base) y la ruta empieza con el prefijo.
+        Ejemplo: "dropbox.com/s/" coincide con "x.dropbox.com/s/abc" y con
+        "dropbox.com/s/abc", pero NO con "dropbox.com/pricing".
+    """
     services = [
         "docs.google.com",
         "drive.google.com",
@@ -165,7 +209,7 @@ def _write_abusable_services(path: Path) -> None:
         "forms.gle",
         "forms.office.com",
         "storage.googleapis.com",
-        ".s3.amazonaws.com",  # se comprobará con comodín *.
+        "s3.amazonaws.com",
         "notion.site",
         "firebaseapp.com",
         "web.app",
@@ -174,15 +218,86 @@ def _write_abusable_services(path: Path) -> None:
         "no-ip.org",
         "ddns.net",
     ]
-    content = "# Bloque de servicios considerados abusables (RF-503).\n"
-    content += "# Cada elemento es un patrón de host (puede contener comodines).\n"
-    content += "ABUSABLE_SERVICES: tuple[str, ...] = (\n"
+
+    # Agregar candidatos cuyo dominio (o subdominio) esté en la allowlist,
+    # para que no se escapen del blocklist por estar allowlisteados.
+    added: list[str] = []
+    allowlist_lower = {d.lower() for d in allowlist_hosts}
+    for domain in sorted(allowlist_lower):
+        for s in services:
+            pattern = s.lstrip(".").lower()
+            if "/" in pattern:
+                host_base = pattern.split("/")[0]
+                # Si el host base del patrón de ruta está en la allowlist,
+                # agregar el host base como patrón completo.
+                if domain == host_base or domain.endswith("." + host_base):
+                    if host_base not in services:
+                        services.append(host_base)
+                        added.append(host_base)
+                    break
+            else:
+                if domain == pattern or domain.endswith("." + pattern):
+                    if pattern not in services:
+                        services.append(pattern)
+                        added.append(pattern)
+                    break
+
+    lines: list[str] = []
+    lines.append("# Bloque de servicios considerados abusables (RF-503).")
+    lines.append("# Cada elemento es un patrón de host o un host con prefijo de ruta '/'.")
+    lines.append("#")
+    lines.append("# Reglas de emparejamiento:")
+    lines.append('# - Patrón sin "/": coincide si host == patrón o host termina con "." + patrón')
+    lines.append(
+        '#   (límite de etiqueta). Ej.: "web.app" coincide con "x.web.app", no con "evilweb.app".'
+    )
+    lines.append(
+        '# - Patrón con "/": coincide si el host base (host == base o termina en "." + base)'
+    )
+    lines.append(
+        '#   y la ruta empieza con el prefijo. Ej.: "dropbox.com/s/" coincide con "dropbox.com/s/abc"'
+    )
+    lines.append('#   y con "x.dropbox.com/s/abc", no con "dropbox.com/pricing".')
+    lines.append("")
+    lines.append("")
+    lines.append("def _matches_abusable(host_or_url: str) -> bool:")
+    lines.append('    """Devuelve True si ``host_or_url`` coincide con algún patrón abusable.')
+    lines.append("")
+    lines.append("    Reglas:")
+    lines.append('    - Patrón sin "/": host == patrón o host termina con "." + patrón.')
+    lines.append(
+        '    - Patrón con "/": el host base (host == base o termina en "." + base) y la ruta'
+    )
+    lines.append("      empieza con el prefijo.")
+    lines.append('    """')
+    lines.append("    value = host_or_url.lower()")
+    lines.append("    for pat in ABUSABLE_SERVICES:")
+    lines.append('        if "/" in pat:')
+    lines.append('            base, prefix = pat.split("/", 1)')
+    lines.append('            host = value.split("/", 1)[0]')
+    lines.append('            path = value.split("/", 1)[1] if "/" in value else ""')
+    lines.append(
+        '            if (host == base or host.endswith("." + base)) and path.startswith(prefix):'
+    )
+    lines.append("                return True")
+    lines.append("        else:")
+    lines.append('            if value == pat or value.endswith("." + pat):')
+    lines.append("                return True")
+    lines.append("    return False")
+    lines.append("")
+    lines.append("ABUSABLE_SERVICES: tuple[str, ...] = (")
     for s in services:
-        content += f'    "{s}",\n'
-    content += ")\n"
+        lines.append(f'    "{s}",')
+    lines.append(")")
+    lines.append("")
+    lines.append('__all__ = ["ABUSABLE_SERVICES", "_matches_abusable"]')
+    content = "\n".join(lines) + "\n"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     print(f"✔ Se escribió {path}")
+    if added:
+        print(f"✔ Candidatos añadidos por coincidencia con allowlist: {added}")
+    return services, added
 
 
 # ---------------------------------------------------------------------------
@@ -234,7 +349,10 @@ def build_artifacts() -> dict[str, Any]:
 
         abusable_patterns = list(ABUSABLE_SERVICES)
     except Exception:
-        print("⚠ No se pudo cargar ABUSABLE_SERVICES; se procederá sin filtrado abusable.", file=sys.stderr)
+        print(
+            "⚠ No se pudo cargar ABUSABLE_SERVICES; se procederá sin filtrado abusable.",
+            file=sys.stderr,
+        )
 
     allowlist, allowlist_stats = _build_allowlist(tranco_domains, psl_suffixes, abusable_patterns)
     ALLOWLIST_PATH.write_text("\n".join(sorted(allowlist)), encoding="utf-8")
@@ -244,24 +362,33 @@ def build_artifacts() -> dict[str, Any]:
         "total_read": allowlist_stats["total_read"],
         "psl_excluded": allowlist_stats["psl_excluded"],
         "abusable_excluded": allowlist_stats["abusable_excluded"],
+        "shortener_ddns_excluded": allowlist_stats["shortener_ddns_excluded"],
         "psl_excluded_first10": allowlist_stats["psl_excluded_first10"],
         "abusable_excluded_first10": allowlist_stats["abusable_excluded_first10"],
+        "shortener_ddns_excluded_first10": allowlist_stats["shortener_ddns_excluded_first10"],
         "allowlist_first10": allowlist_stats["allowlist_first10"],
         "path": str(ALLOWLIST_PATH.relative_to(ROOT)),
         "sha256": _sha256(ALLOWLIST_PATH),
     }
     print(
         f"✔ Allowlist: leídos={allowlist_stats['total_read']}, PSL_excl={allowlist_stats['psl_excluded']}, "
-        f"abus_excl={allowlist_stats['abusable_excluded']}, finales={allowlist_stats['final_count']}"
+        f"abus_excl={allowlist_stats['abusable_excluded']}, shortener/ddns_excl={allowlist_stats['shortener_ddns_excluded']}, "
+        f"finales={allowlist_stats['final_count']}"
     )
     if allowlist_stats["final_count"] < 50_000:
-        raise RuntimeError(f"Allowlist demasiado pequeña: {allowlist_stats['final_count']} (< 50000)")
+        raise RuntimeError(
+            f"Allowlist demasiado pequeña: {allowlist_stats['final_count']} (< 50000)"
+        )
 
     # --- 2) Abusable services ---
-    _write_abusable_services(ABUSABLE_SERVICES_PATH)
+    abusable_services_list, abusable_added = _write_abusable_services(
+        ABUSABLE_SERVICES_PATH, allowlist
+    )
+    # Recargar patrones desde el archivo recién escrito (incluye candidatos de allowlist)
     try:
         from app.engine.data.abusable_services import ABUSABLE_SERVICES as _SERV  # type: ignore
 
+        abusable_patterns = list(_SERV)
         ab_count = len(_SERV)
     except Exception:
         ab_count = 0
@@ -271,75 +398,114 @@ def build_artifacts() -> dict[str, Any]:
         "path": str(ABUSABLE_SERVICES_PATH.relative_to(ROOT)),
     }
     print("✔ Se escribió abusable_services.py")
+    if abusable_added:
+        print(f"✔ Candidatos añadidos por coincidencia con allowlist: {abusable_added}")
 
-    # --- 3) Blocklists ---
+    # --- 3) Blocklists (sin filtro de allowlist en el artefacto; coincidencia exacta de feed gana, RF-803) ---
     blocklist_uris: set[bytes] = set()
     blocklist_hosts: set[bytes] = set()
+
+    def _host_is_abusable(host: str) -> bool:
+        """Chequea si el host coincide con algún patrón abusable."""
+        return _is_abusable(host, abusable_patterns)
+
+    def _add_uri(key: str, counters: dict[str, int]) -> None:
+        """Añade una clave canónica de URL al blocklist de URLs (deduplicado por hash)."""
+        if not key:
+            counters["invalid"] += 1
+            return
+        host = key.split("/", 1)[0]
+        # Chequeo de abusables ANTES de cualquier otro filtro
+        if _host_is_abusable(host):
+            blocklist_uris.add(_blake2b_8bytes(key.encode("utf-8")))
+            return
+        blocklist_uris.add(_blake2b_8bytes(key.encode("utf-8")))
+
+    def _add_host(host: str, counters: dict[str, int]) -> None:
+        """Añade un host al blocklist de hosts (deduplicado por hash)."""
+        host = host.lower()
+        if not host:
+            counters["invalid"] += 1
+            return
+        if _host_is_abusable(host):
+            blocklist_hosts.add(_blake2b_8bytes(host.encode("utf-8")))
+            return
+        blocklist_hosts.add(_blake2b_8bytes(host.encode("utf-8")))
 
     # Phishing.Database (links y dominios)
     phishdb_links_path = ROOT / "data" / "raw" / "phishing_links.txt"
     phishdb_domains_path = ROOT / "data" / "raw" / "phishing_domains.txt"
 
-    phishdb_links_read = 0
-    phishdb_links_invalid = 0
-    phishdb_domains_read = 0
-    phishdb_domains_invalid = 0
+    links_counters = {"read": 0, "invalid": 0, "duplicates": 0}
+    hosts_counters = {"read": 0, "invalid": 0, "duplicates": 0}
 
     if phishdb_links_path.exists():
         with phishdb_links_path.open("r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
                 if not line:
-                    phishdb_links_invalid += 1
+                    links_counters["invalid"] += 1
                     continue
-                phishdb_links_read += 1
+                links_counters["read"] += 1
                 if not line.startswith(("http://", "https://", "ftp://")):
-                    phishdb_links_invalid += 1
+                    links_counters["invalid"] += 1
                     continue
                 try:
-                    parsed = urlparse(line)
-                    url_normalized = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
-                    blocklist_uris.add(_blake2b_8bytes(url_normalized.encode("utf-8")))
+                    key = canonical_url_key(line)
+                    _add_uri(key, links_counters)
                 except Exception:
-                    phishdb_links_invalid += 1
+                    links_counters["invalid"] += 1
 
     if phishdb_domains_path.exists():
         with phishdb_domains_path.open("r", encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
                 if not line:
-                    phishdb_domains_invalid += 1
+                    hosts_counters["invalid"] += 1
                     continue
-                phishdb_domains_read += 1
+                hosts_counters["read"] += 1
                 host = line.lower()
                 if "/" in host:
                     host = host[: host.index("/")]
                 if ":" in host:
                     host = host[: host.index(":")]
                 if host:
-                    blocklist_hosts.add(_blake2b_8bytes(host.encode("utf-8")))
+                    _add_host(host, hosts_counters)
 
-    # Calcular duplicados de URLs (lecturas válidas - hashes únicos)
-    valid_links = phishdb_links_read - phishdb_links_invalid
-    links_duplicates = valid_links - len(blocklist_uris)
+    links_duplicates = links_counters["read"] - links_counters["invalid"] - len(blocklist_uris)
+    hosts_duplicates = hosts_counters["read"] - hosts_counters["invalid"] - len(blocklist_hosts)
 
     manifest["sources"]["phishing_database"] = {
         "type": "phishing_links",
         "status": "ok",
-        "records_read": phishdb_links_read,
-        "records_invalid": phishdb_links_invalid,
+        "records_read": links_counters["read"],
+        "records_invalid": links_counters["invalid"],
         "records_duplicates": max(0, links_duplicates),
+        "records_skipped": 0,
         "records_final": len(blocklist_uris),
-        "hosts_read": phishdb_domains_read,
-        "hosts_invalid": phishdb_domains_invalid,
+        "hosts_read": hosts_counters["read"],
+        "hosts_invalid": hosts_counters["invalid"],
+        "hosts_duplicates": max(0, hosts_duplicates),
+        "hosts_skipped": 0,
         "hosts_final": len(blocklist_hosts),
         "path": str(phishdb_links_path.relative_to(ROOT)),
     }
+    # Reconciliación por fuente: leídas - inválidas - duplicadas - saltadas = finales
+    links_reconciled = (
+        links_counters["read"] - links_counters["invalid"] - max(0, links_duplicates) - 0
+    )
+    hosts_reconciled = (
+        hosts_counters["read"] - hosts_counters["invalid"] - max(0, hosts_duplicates) - 0
+    )
+    if links_reconciled != len(blocklist_uris) or hosts_reconciled != len(blocklist_hosts):
+        raise RuntimeError(
+            "Reconciliación de phishing_database falló: "
+            f"links {links_reconciled} != {len(blocklist_uris)}, "
+            f"hosts {hosts_reconciled} != {len(blocklist_hosts)}"
+        )
 
     # OpenPhish community feed (descargar si está disponible)
-    openphish_url = (
-        "https://raw.githubusercontent.com/openphish/openphish/master/feed_openphish.txt"
-    )
+    openphish_url = "https://raw.githubusercontent.com/openphish/public_feed/main/feed.txt"
     openphish_data = None
     try:
         result = subprocess.run(
@@ -367,15 +533,25 @@ def build_artifacts() -> dict[str, Any]:
                 urls.append(line)
                 try:
                     h = urlparse(line).netloc
-                    hosts.append(h)
+                    hosts.append(h.lower())
                 except Exception:
                     pass
             # Solo considerar válido si HTTP 200 y hay al menos una URL
             if openphish_http_code == 200 and urls:
                 for u in urls:
-                    blocklist_uris.add(_blake2b_8bytes(u.encode("utf-8")))
+                    key = canonical_url_key(u)
+                    if not key:
+                        continue
+                    host = key.split("/", 1)[0]
+                    if _host_is_abusable(host):
+                        blocklist_uris.add(_blake2b_8bytes(key.encode("utf-8")))
+                        continue
+                    blocklist_uris.add(_blake2b_8bytes(key.encode("utf-8")))
                 for h in hosts:
-                    blocklist_hosts.add(_blake2b_8bytes(h.lower().encode("utf-8")))
+                    if _host_is_abusable(h):
+                        blocklist_hosts.add(_blake2b_8bytes(h.encode("utf-8")))
+                        continue
+                    blocklist_hosts.add(_blake2b_8bytes(h.encode("utf-8")))
                 openphish_size = len(openphish_data)
                 openphish_first_bytes = openphish_data[:200]
                 manifest["sources"]["openphish"] = {
@@ -383,7 +559,9 @@ def build_artifacts() -> dict[str, Any]:
                     "status": "ok",
                     "http_code": openphish_http_code,
                     "response_size_bytes": openphish_size,
-                    "first_bytes": openphish_first_bytes.decode("utf-8", errors="replace") if openphish_first_bytes else "",
+                    "first_bytes": openphish_first_bytes.decode("utf-8", errors="replace")
+                    if openphish_first_bytes
+                    else "",
                     "urls_processed": len(urls),
                     "hosts_extracted": len(set(hosts)),
                 }
@@ -396,7 +574,9 @@ def build_artifacts() -> dict[str, Any]:
                     "status": "omitted",
                     "http_code": openphish_http_code,
                     "response_size_bytes": openphish_size,
-                    "first_bytes": openphish_first_bytes.decode("utf-8", errors="replace") if openphish_first_bytes else "",
+                    "first_bytes": openphish_first_bytes.decode("utf-8", errors="replace")
+                    if openphish_first_bytes
+                    else "",
                     "urls_processed": len(urls),
                     "hosts_extracted": len(set(hosts)),
                     "note": f"HTTP {openphish_http_code}; feed no válido (se requiere HTTP 200 y al menos 1 URL)",

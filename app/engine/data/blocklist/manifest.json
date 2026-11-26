@@ -1,0 +1,116 @@
+{
+  "built_at": "2026-11-26T03:59:36Z",
+  "sources": {
+    "allowlist": {
+      "type": "tranco_top100k",
+      "count": 99520,
+      "total_read": 100000,
+      "psl_excluded": 439,
+      "abusable_excluded": 18,
+      "shortener_ddns_excluded": 23,
+      "psl_excluded_first10": [
+        "googleapis.com",
+        "akamai.net",
+        "akamaiedge.net",
+        "akadns.net",
+        "cloudfront.net",
+        "trafficmanager.net",
+        "cloudflare.net",
+        "myfritz.net",
+        "edgekey.net",
+        "workers.dev"
+      ],
+      "abusable_excluded_first10": [
+        "sharepoint.com",
+        "googleusercontent.com",
+        "windows.net",
+        "forms.gle",
+        "weebly.com",
+        "oraclecloud.com",
+        "ovh.net",
+        "typeform.com",
+        "wpengine.com",
+        "secureserver.net"
+      ],
+      "shortener_ddns_excluded_first10": [
+        "goo.gl",
+        "bit.ly",
+        "t.co",
+        "tinyurl.com",
+        "lnkd.in",
+        "shorturl.at",
+        "cutt.ly",
+        "is.gd",
+        "ow.ly",
+        "clck.ru"
+      ],
+      "allowlist_first10": [
+        "0-r-a-v.com",
+        "000cheapdomains.com",
+        "000webhost.com",
+        "000webhostapp.com",
+        "004430.xyz",
+        "007.com",
+        "0088dns.com",
+        "00px.net",
+        "00web.net",
+        "00y888.com"
+      ],
+      "path": "app/engine/data/allowlist_top100k.txt",
+      "sha256": "2a4e4b053ce890bc770fb58b1d72a7ef883b69158e9163e675294966b0632be1"
+    },
+    "abusable_services": {
+      "type": "rf503_seed",
+      "count": 39,
+      "path": "app/engine/data/abusable_services.py"
+    },
+    "phishing_database": {
+      "type": "phishing_links",
+      "status": "ok",
+      "records_read": 789054,
+      "records_invalid": 0,
+      "records_duplicates": 43634,
+      "records_skipped": 0,
+      "records_final": 745420,
+      "hosts_read": 392178,
+      "hosts_invalid": 0,
+      "hosts_duplicates": 104,
+      "hosts_skipped": 0,
+      "hosts_final": 392074,
+      "path": "data/raw/phishing_links.txt"
+    },
+    "openphish": {
+      "type": "community_feed",
+      "status": "ok",
+      "http_code": 200,
+      "response_size_bytes": 13494,
+      "first_bytes": "https://roblox.com.sy/users/834919932/profile\nhttps://mhojiakbar0717-max.github.io/instagram\nhttps://www.roblox.com.pt/games/2753915549/Blox-Fruits?privateServerLinkCode=221377697174555097029986550695",
+      "urls_processed": 301,
+      "hosts_extracted": 287
+    },
+    "urlhaus": {
+      "type": "urlhaus_feed",
+      "status": "omitted",
+      "note": "requiere API key (URLHAUS_AUTH_KEY); omitido por defecto"
+    },
+    "phishtank": {
+      "type": "phishtank_api",
+      "status": "omitted",
+      "note": "apikey opcional; omitido por defecto"
+    },
+    "blocklist_urls": {
+      "type": "blake2b_8bytes",
+      "count": 745716,
+      "path": "app/engine/data/blocklist/blocklist_urls.bin",
+      "sha256": "efee35313097b52e95a1e2b9566291934feb50b28e4a29956ed201269108b2ca"
+    },
+    "blocklist_hosts": {
+      "type": "blake2b_8bytes",
+      "count": 392350,
+      "path": "app/engine/data/blocklist/blocklist_hosts.bin",
+      "sha256": "859f8bd55739c91657ae963336ab1b3c0f6fce8c04790e0e2b6daf74802c7e78"
+    }
+  },
+  "errors": [],
+  "total_size_mb": 9.974709510803223
+}
