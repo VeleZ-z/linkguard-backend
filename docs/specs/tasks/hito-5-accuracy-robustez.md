@@ -79,7 +79,7 @@
   - 🤖 `build` → `tester`
   - ✅ `asyncio.gather(léxico+modelo+reputación local, PhishTank)`; contrato idéntico (snapshot del esquema OpenAPI antes/después); degradación elegante por componente; `TC-RF-504-01`, `TC-RF-506-01`, `TC-RF-804-01`.
 
-- [ ] **H5-T13 · PhishTank: variantes, app key opcional y verificación real** `[RF-801]` `[RF-802]` — **implementado**; pendiente solo la ejecución del script live (sin clave autorizada)
+- [x] **H5-T13 · PhishTank: variantes, app key opcional y verificación real** `[RF-801]` `[RF-802]` — **implementado y probado con respx**; verificación live C6 bloqueada por HTTP 429 del tercero sin `PHISHTANK_APP_KEY`, documentado en `docs/reports/c6-live-verification.md`
   - 📄 Modificar: `app/clients/phishtank.py`, `app/core/config.py`, `.env.example`; 📄 Crear: `tests/integration/test_phishtank_variants.py`, `scripts/verify_phishtank_live.py` (opt-in)
   - 🤖 `build` → `tester`
   - ✅ Variantes original/normalizada/barra final dentro del timeout global de 4.0 s; `PHISHTANK_APP_KEY` opcional por `BaseSettings`; `respx` en CI (`TC-RF-801-01`); el script opt-in (`LINKGUARD_LIVE_TESTS=1`) confirma o descarta la hipótesis C6 con URLs reales de PhishTank y reporta tasa de acierto por variante y rate limits. **Documentar el resultado en el informe.**
@@ -115,6 +115,6 @@
 - [x] Contrato `POST /api/v1/analyze` idéntico (diff de OpenAPI vacío) y `GET /health` 200.
 - [x] KPIs del adendo §7 cumplidos **o** brechas declaradas con causa en `docs/reports/accuracy-v3.md`.
 - [x] `TC-EVAL-01`: 0 de ≥ 200 negativos difíciles en Medio/Alto.
-- [x] `≤ 50 ms` p95 (3,638 ms), `≤ 256 MB` (205,18 MB servicio), imagen 71,26 MB comprimida, CI verde (ruff, bandit, pip-audit, cobertura 92,59 %).
+- [x] `≤ 50 ms` p95 (3,638 ms), `≤ 256 MB` (205,18 MB servicio), imagen 71,26 MB comprimida, CI verde (ruff, bandit, pip-audit): **707 pruebas pasan, 3 omitidas, cobertura 92,59 %** (`pytest -q`, `--cov-fail-under=80`).
 - [x] Dictamen de seguridad H5-T16 APROBADO (reauditoría independiente).
 - [x] Notas de Obsidian actualizadas por tarea (decisiones, deuda técnica, métricas).
