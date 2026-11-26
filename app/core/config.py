@@ -79,6 +79,24 @@ class Settings(BaseSettings):
         default="https://checkurl.phishtank.com/checkurl/",
         description="Endpoint público de consulta de PhishTank.",
     )
+    MODEL_THRESHOLD_MEDIO: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Sobrescribe `t_medio` del modelo para SCORE ML (RF-603). Si no se "
+            "define, se usa el valor calibrado en `model_v1.json`."
+        ),
+    )
+    MODEL_THRESHOLD_ALTO: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Sobrescribe `t_alto` del modelo para SCORE ML (RF-603). Si no se "
+            "define, se usa el valor calibrado en `model_v1.json`."
+        ),
+    )
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
@@ -109,6 +127,14 @@ class Settings(BaseSettings):
                     "CORS_ORIGINS no admite comodines; declare los orígenes "
                     "autorizados de forma explícita"
                 )
+        return value
+
+    @field_validator("MODEL_THRESHOLD_MEDIO", "MODEL_THRESHOLD_ALTO", mode="before")
+    @classmethod
+    def _empty_threshold_is_none(cls, value: object) -> object:
+        """Interpreta una variable vacía como «sin sobrescritura» (RF-603)."""
+        if isinstance(value, str) and not value.strip():
+            return None
         return value
 
     @field_validator("PHISHTANK_API_URL")

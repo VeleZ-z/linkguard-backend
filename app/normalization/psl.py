@@ -29,6 +29,11 @@ class PSL:
     """Carga y consulta la Public Suffix List vendorizada."""
 
     _lines: list[str] = []
+    # Sufijos ordenados una sola vez al cargar: ordenar 14 693 entradas por
+    # consulta hacía inviable el featurizador masivo (RF-605/RNF-109).
+    _sorted_lines: tuple[str, ...] = ()
+    # Índice por última etiqueta: evita recorrer los 14 693 sufijos en cada URL.
+    _by_last_label: dict[str, tuple[str, ...]] = {}
 
     @classmethod
     def load(cls) -> None:
@@ -39,6 +44,13 @@ class PSL:
             cls._lines = [
                 line.strip() for line in handle if line.strip() and not line.startswith("#")
             ]
+        cls._sorted_lines = tuple(
+            sorted(cls._lines, key=lambda suffix: len(suffix.split(".")), reverse=True)
+        )
+        groups: dict[str, list[str]] = {}
+        for suffix in cls._sorted_lines:
+            groups.setdefault(suffix.split(".")[-1], []).append(suffix)
+        cls._by_last_label = {label: tuple(items) for label, items in groups.items()}
 
     @classmethod
     def _match_suffix(cls, host_labels: list[str], suffix_labels: list[str]) -> bool:
@@ -70,12 +82,7 @@ class PSL:
         if _is_ip(host):
             return host
         host_labels = host.lower().split(".")
-        suffixes = sorted(
-            cls._lines,
-            key=lambda s: len(s.split(".")),
-            reverse=True,
-        )
-        for suffix in suffixes:
+        for suffix in cls._by_last_label.get(host_labels[-1], ()):
             suffix_clean = suffix.lstrip(".")
             suffix_labels = suffix_clean.split(".")
             if cls._match_suffix(host_labels, suffix_labels):
