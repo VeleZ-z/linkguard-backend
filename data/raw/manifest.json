@@ -1,0 +1,936 @@
+{
+  "fetched_at": "2026-11-25T23:35:53.494937+00:00",
+  "tranco_list_id": "JZW4Y",
+  "sources": {
+    "jpcert": {
+      "status": "ok",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201901.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201901.csv",
+          "bytes": 26142,
+          "sha256": "98fb48b3be5cc04b083e44f5288221bac66b4966c98bc7135e6a2271197252c3",
+          "records": 315,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201902.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201902.csv",
+          "bytes": 32347,
+          "sha256": "e9f4eca11147640c44d9752bb485a57049c87198313957b5df208f07f7133373",
+          "records": 434,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201903.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201903.csv",
+          "bytes": 46287,
+          "sha256": "e418147cd89390e8a2986d9598f2a507d4ab136499f35e47fce9b06343504e24",
+          "records": 588,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201904.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201904.csv",
+          "bytes": 30850,
+          "sha256": "2928487e6351a7eb135c10a38ca4066459953113718d6642715d69667c4065df",
+          "records": 398,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201905.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201905.csv",
+          "bytes": 40604,
+          "sha256": "01252325db148f51a2b2f2f033f218b76776a106073823663beecee0cb5a0f07",
+          "records": 518,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201906.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201906.csv",
+          "bytes": 34964,
+          "sha256": "d95de512f47ebcd39025be462f3e11e8a700a97193abd884996a6d7264cf7556",
+          "records": 458,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201907.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201907.csv",
+          "bytes": 58679,
+          "sha256": "7fd1cb02ba88fbec62503afcf9c2574312e52522edf25d985b2dac0863237b35",
+          "records": 835,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201908.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201908.csv",
+          "bytes": 52188,
+          "sha256": "6d91bf27987a666b684e719efad0867c81325fb8ed7b58f697996c7996325072",
+          "records": 660,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201909.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201909.csv",
+          "bytes": 49166,
+          "sha256": "7b2a38743a6d4942143e64960db317157b465ffd5a41e6e5dd81833bc254a21f",
+          "records": 567,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201910.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201910.csv",
+          "bytes": 45638,
+          "sha256": "51f72ca8dab948b3d48a4b99ee942488983a39d31a28daedb9f6c23d2ebcc218",
+          "records": 588,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201911.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201911.csv",
+          "bytes": 40169,
+          "sha256": "68f4b69a79a2693b360bb575612059cd91bc6f77f17dca146ffee9b8fedcba48",
+          "records": 505,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2019/201912.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2019/201912.csv",
+          "bytes": 51369,
+          "sha256": "e2a01d988e830bff6a555b08182b3a4bd3b803da3a9b9b6fc64b6d6d5a3ce662",
+          "records": 581,
+          "year": 2019
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202001.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202001.csv",
+          "bytes": 56654,
+          "sha256": "935de963c13f45312ff54226730448717e76e49d6c760370aff0f306117d400e",
+          "records": 646,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202002.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202002.csv",
+          "bytes": 69849,
+          "sha256": "c7f0168dced4c0f2c4e2f7baff1ab3fc3d07313dbc5f329cd89760394fa5fa7c",
+          "records": 830,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202003.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202003.csv",
+          "bytes": 101259,
+          "sha256": "f35f8214315732887d285ef7e295bc4ce6989b472f45ad1cf0701b365ca6d103",
+          "records": 1124,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202004.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202004.csv",
+          "bytes": 81929,
+          "sha256": "272c99abdcceec239a97f3b01f09db879979dde64abe9c2fb748f6adc3b8adef",
+          "records": 971,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202005.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202005.csv",
+          "bytes": 56605,
+          "sha256": "50bebc2e96d65a79db3921e15c388645f910cf3a8a7b432a55be800e5f82927c",
+          "records": 725,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202006.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202006.csv",
+          "bytes": 82644,
+          "sha256": "6ce07f892830f1ff4095c90c186b868f5e54419e7fb8bc2d9534dc842371d104",
+          "records": 975,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202007.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202007.csv",
+          "bytes": 84729,
+          "sha256": "fc296ff24ac3d2da1a28c1489ea6f3ed2ef54ea72627535ac425b9fbe935cec9",
+          "records": 950,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202008.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202008.csv",
+          "bytes": 88422,
+          "sha256": "4c1f01dc15879e6f9ce8dabb6aa636a8279dc9231192511b928f6fa9dd4c8a99",
+          "records": 1130,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202009.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202009.csv",
+          "bytes": 88342,
+          "sha256": "59795210a7fd415f6b5081a172cce98bc945626e05441823968df0ade3735b37",
+          "records": 1192,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202010.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202010.csv",
+          "bytes": 92021,
+          "sha256": "893889fce36ebe1edb6427f3f0301bc04ffb2d86393f89e29f0c222e174fd837",
+          "records": 1232,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202011.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202011.csv",
+          "bytes": 63820,
+          "sha256": "4dd1dba35489f9fc766a69646129d9b63fde7167315e633506890c467c08a65e",
+          "records": 893,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2020/202012.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2020/202012.csv",
+          "bytes": 97313,
+          "sha256": "56375f0fa85806439f22682fa80086f4316578236640580a2b795b08133572f3",
+          "records": 1459,
+          "year": 2020
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202101.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202101.csv",
+          "bytes": 79366,
+          "sha256": "dcdeed8790e3307d990571fec50ddaa661668093654f203a97a68c888a5608fe",
+          "records": 1134,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202102.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202102.csv",
+          "bytes": 74086,
+          "sha256": "aa0703ad7bc72b9a761e42e0f62381bcd220873d6bb06df13d9080013d0155cd",
+          "records": 1058,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202103.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202103.csv",
+          "bytes": 77877,
+          "sha256": "684d65f8d891ec92caaaaf9b9480caeb0833207a1cff3fa244da1d2ae6c0211b",
+          "records": 1102,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202104.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202104.csv",
+          "bytes": 100486,
+          "sha256": "64f2253a188a378e2205c0174c393487cc6357dce74cf3890afaa0f5652548b0",
+          "records": 1491,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202105.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202105.csv",
+          "bytes": 105691,
+          "sha256": "d75675a3644803971fb7c54ff110d787779321fc926758e21060ded48e001526",
+          "records": 1586,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202106.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202106.csv",
+          "bytes": 114206,
+          "sha256": "6f1d732dd8c451cb796f8c4bcf89962b052bc7846f4013879d67dc8c23d1517a",
+          "records": 1626,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202107.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202107.csv",
+          "bytes": 132768,
+          "sha256": "a56a91d1696d3ae5357233dbee104130143ccdb67da066c86215d1aa89979ff2",
+          "records": 1827,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202108.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202108.csv",
+          "bytes": 252016,
+          "sha256": "2fd58b6d24ea7bcff0c1c63369676f72ae10669b305fe9b5eb123e685d44c88c",
+          "records": 3568,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202109.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202109.csv",
+          "bytes": 176405,
+          "sha256": "258bbf7512f9509ccf4e18c7fa7213b7b42d7cf1b2e0cc38ef9e6641c39edf34",
+          "records": 2669,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202110.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202110.csv",
+          "bytes": 237413,
+          "sha256": "a2b190192d03c7566f87f00a2df1851ea2c0c0736a6c3b40d6ddd0da1f3b7d2c",
+          "records": 3614,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202111.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202111.csv",
+          "bytes": 265981,
+          "sha256": "dbc72f21792f37ec651753ed30fc603f1f12c22f0af62d99113b1784fc0c26a2",
+          "records": 4281,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2021/202112.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2021/202112.csv",
+          "bytes": 252658,
+          "sha256": "c0d97a98cae42bc9c9e384b54dbd63faf914ae910c04a556540b0ce86f7f0211",
+          "records": 3953,
+          "year": 2021
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202201.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202201.csv",
+          "bytes": 214075,
+          "sha256": "f03e79b5308480f825e16f3ebec000af3d8c4c326fda0bf6aec993c53846c616",
+          "records": 3348,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202202.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202202.csv",
+          "bytes": 311811,
+          "sha256": "a536e78e44e2ec54278ba6e54401b6e4e4b9a256147aeafac8c10caf905b131a",
+          "records": 4799,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202203.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202203.csv",
+          "bytes": 421963,
+          "sha256": "16cc8cfbf9c4f669e4901c897d6d9c20733714ad7623c9fbc2ce175b8138199f",
+          "records": 6611,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202204.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202204.csv",
+          "bytes": 369944,
+          "sha256": "9c2c6d4cf57fcfbae809ea0478a12bbbc5b1639a7ad00e8cecabba33794e2db8",
+          "records": 5397,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202205.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202205.csv",
+          "bytes": 435144,
+          "sha256": "d86c8e8226ca06693404ec63a0afc11d19e3684a1ac1b665c5f7be47b08c7911",
+          "records": 6151,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202206.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202206.csv",
+          "bytes": 499815,
+          "sha256": "d88dabae1bf539fe8ed381c2e0e79de5715572f16d60d2c5b532477c01f9ea20",
+          "records": 7021,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202207.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202207.csv",
+          "bytes": 501777,
+          "sha256": "a3df6a3d4345e459f43875547a6c5a78dacbb2101d4c5437ed28dde727f499b9",
+          "records": 7190,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202208.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202208.csv",
+          "bytes": 379609,
+          "sha256": "5a317e52d127e1358ba2f749f053ca6e3af34f51810d2b2e1c52ae7ee8e920eb",
+          "records": 5336,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202209.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202209.csv",
+          "bytes": 355031,
+          "sha256": "f8cc90b019ca7f12bda032bd7f2092a9ce4477570ecb95b082db3d0dc0f802f5",
+          "records": 4902,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202210.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202210.csv",
+          "bytes": 379934,
+          "sha256": "322cdfe480dc27b829f293b563a970f46c15cf88a2631a86ef77b3e20b208189",
+          "records": 5375,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202211.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202211.csv",
+          "bytes": 163450,
+          "sha256": "60292372d1291497600ae7b28c4148187371520fcf823928d96cbb1140dc3fef",
+          "records": 2415,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2022/202212.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2022/202212.csv",
+          "bytes": 220480,
+          "sha256": "09f8dbe319e38ba4dd022f5f7c549649b3b0884641508c3aadaff715acc43f0d",
+          "records": 3373,
+          "year": 2022
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202301.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202301.csv",
+          "bytes": 136327,
+          "sha256": "41589b8b9c4dfb509386c4ae7ecb93c3e9665df9637aecc6b5dbef7cc36162f9",
+          "records": 2040,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202302.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202302.csv",
+          "bytes": 157753,
+          "sha256": "cf422ba65b4d3982c12eb78c81fa0093d9d5687fbebd35e87d8cfa0bc8d718a1",
+          "records": 2270,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202303.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202303.csv",
+          "bytes": 296911,
+          "sha256": "3b602626063d519dee8095f7bc8a35e55e15da89de498e5fe937e02ddffa34c4",
+          "records": 3936,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202304.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202304.csv",
+          "bytes": 302824,
+          "sha256": "d3d568207b81bd3586101af118976ab7760d0f2b7f172b66fe39530192735677",
+          "records": 4218,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202305.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202305.csv",
+          "bytes": 515049,
+          "sha256": "36aceafce706c0fa6378568ad8dd1becef2235dcef00d4bf39acea9c5b47c747",
+          "records": 7250,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202306.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202306.csv",
+          "bytes": 694739,
+          "sha256": "ef01b4ac32444ac3d57e5d7b561599d5cb2a8d73145611551d15954c46397405",
+          "records": 10581,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202307.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202307.csv",
+          "bytes": 373045,
+          "sha256": "d939e502e526beababcbb15e2f60f9482314d9327d61a64105b951359f1a726e",
+          "records": 5482,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202308.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202308.csv",
+          "bytes": 411706,
+          "sha256": "7e48e07923a0c18cdb2792c277a16dc888143e50ad72006b31d5f7762b6b1f52",
+          "records": 6023,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202309.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202309.csv",
+          "bytes": 316962,
+          "sha256": "737bf705d05429faf0370ef793a2fb9682b6850a956aa95e89516d4d9741865b",
+          "records": 4422,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202310.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202310.csv",
+          "bytes": 282193,
+          "sha256": "18df761c488af89e99cdeedf9bc062c79fba58dd2503bdc2c10d6a9208032e83",
+          "records": 4137,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202311.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202311.csv",
+          "bytes": 297317,
+          "sha256": "443229ec9ad8a3b854df58d9eb787a0405be1ed713245ff297ea1d813835e66a",
+          "records": 4193,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2023/202312.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2023/202312.csv",
+          "bytes": 416192,
+          "sha256": "4f36d723d13bcc41da0e8477884e9495777e3da2f3a33fea052f8130197c3833",
+          "records": 6242,
+          "year": 2023
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202401.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202401.csv",
+          "bytes": 379289,
+          "sha256": "00bd16cb459df6d27672c8cfa25b202743f275d71568365cdf9e6eb56febdbe3",
+          "records": 5772,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202402.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202402.csv",
+          "bytes": 555569,
+          "sha256": "a4df493eccd6754bfdfcd0e7df3ac9d41dc9bb055dd653eda715d829ec11280b",
+          "records": 7994,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202403.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202403.csv",
+          "bytes": 396446,
+          "sha256": "6adcc7222a872ffa501810ad2cf4ecebd1c3fe0a183e165b615bea8fbed127b2",
+          "records": 6248,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202404.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202404.csv",
+          "bytes": 456799,
+          "sha256": "644482a9af576f70235ae622f6c9f34b072d94260bffb0c61e304bc638ba471b",
+          "records": 7267,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202405.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202405.csv",
+          "bytes": 334081,
+          "sha256": "a3769972cb335cdb4677bd8a49ee2115d9982e016ad2cd70c5a20c2610db0ed9",
+          "records": 5166,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202406.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202406.csv",
+          "bytes": 263243,
+          "sha256": "d4a1d90964df9092aebc270e685110b7fb382a9ccca389d85deb75f7de76acdf",
+          "records": 3906,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202407.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202407.csv",
+          "bytes": 240691,
+          "sha256": "b28da7903579e96869f40903583ada2065b5f73caa94df366306c08f546b0cab",
+          "records": 3561,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202408.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202408.csv",
+          "bytes": 268861,
+          "sha256": "2d36b9290fdae5191c2cdec5c29a151ed6ada692795eed1acab074a8c5bea61f",
+          "records": 3752,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202409.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202409.csv",
+          "bytes": 166287,
+          "sha256": "2efb29c727b96f597d5bbcf4d80bb7394c7f7d5452a57f52fada6a685a7da9d9",
+          "records": 2416,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202410.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202410.csv",
+          "bytes": 317502,
+          "sha256": "1e39779c528bcdab6efb948987b7780b6d27b3d68a972e679875a72dccf0bd9f",
+          "records": 4729,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202411.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202411.csv",
+          "bytes": 214064,
+          "sha256": "2dafc29513016013eeff1446d95442e6bd530614807d2cdfe5e8be590ed713c7",
+          "records": 3415,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2024/202412.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2024/202412.csv",
+          "bytes": 191228,
+          "sha256": "09c51cf3a169f3a8a8debfc62f366b3101532932fa03b7ea25768842af104cb4",
+          "records": 2686,
+          "year": 2024
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202501.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202501.csv",
+          "bytes": 192812,
+          "sha256": "5cb5f3224c3a9d9f8e5ad96b05006e08f0e5b2b1743f36c27d5c9be823c328f1",
+          "records": 2582,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202502.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202502.csv",
+          "bytes": 136115,
+          "sha256": "026647ed12de569f98874811e4c3a99dbe0f3d90143a2562456b382af2c63d3c",
+          "records": 1790,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202503.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202503.csv",
+          "bytes": 164100,
+          "sha256": "7b52adb3adc3f3cfe531faab6ab85af576502b487d673dfc6c6e4d44ebbde93e",
+          "records": 2344,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202504.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202504.csv",
+          "bytes": 145441,
+          "sha256": "0e0736aaf4afe8923b1c2f39201cbc7b2d84de310b9fece4ae50b0d1a1e25e51",
+          "records": 2068,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202505.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202505.csv",
+          "bytes": 179669,
+          "sha256": "c3db2f9cd58f62e14a9423aaac9f49bf2996515380dd5e1ff5ba2c472fd8fdb3",
+          "records": 2572,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202506.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202506.csv",
+          "bytes": 265662,
+          "sha256": "15a5b568cbd51a0e03bd8fa4683021ca80f6f83d6aa74ab5a79609280362539a",
+          "records": 3718,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202507.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202507.csv",
+          "bytes": 372482,
+          "sha256": "e4ddc30e62b0bca574484787844379ec0f225964ae8b41b31cd551d713ccf198",
+          "records": 5118,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202508.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202508.csv",
+          "bytes": 232869,
+          "sha256": "102159b1e0fb2169c407950c2eb225612c9c2d778eecbe9e56a0b6e53997f1e4",
+          "records": 3035,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202509.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202509.csv",
+          "bytes": 213930,
+          "sha256": "e63520165e6de352c97d2782337cbfb6dc3ca3490dc261f5ca55c4d7aadabd8a",
+          "records": 2783,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202510.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202510.csv",
+          "bytes": 441394,
+          "sha256": "3d79e71b3283ff74364b78b1e7dd14b2f340bfd654f6f6b29f4178e4feb5bd67",
+          "records": 5818,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202511.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202511.csv",
+          "bytes": 484951,
+          "sha256": "b61e8e1486e7282cbf546bee011974f9aee0f634e5981d97ca4e797e9bd704f0",
+          "records": 6158,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2025/202512.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2025/202512.csv",
+          "bytes": 325553,
+          "sha256": "a8d9a99f946d507c68c94589de64f7e96e0ca640e13a04c4741cb774bf050fda",
+          "records": 4448,
+          "year": 2025
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202601.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202601.csv",
+          "bytes": 226944,
+          "sha256": "4f32ac3f1f0a371a8578d2420984360d71f909ee921fb4d0ec653ff7ddcee368",
+          "records": 2830,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202602.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202602.csv",
+          "bytes": 117010,
+          "sha256": "299164dac6f76c8a0753422f384f2fd96cd99c3c9107f2edb71d1a1a1ca70261",
+          "records": 1625,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202603.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202603.csv",
+          "bytes": 218611,
+          "sha256": "c37986295627a6988c6b4fadb53a962c79e290b9788e78fec98b533c2d0cbc8a",
+          "records": 2786,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202604.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202604.csv",
+          "bytes": 268751,
+          "sha256": "8ac88a336c2704070e4df6d109df4d642b36c4aa1a38ff4a65c4acdf5a6b3576",
+          "records": 3071,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202605.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202605.csv",
+          "bytes": 139119,
+          "sha256": "55f3fd40476f53316e2f527ca3e1ffaf4c11b55caa026ca80dcb0fa30758d7b6",
+          "records": 1743,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202606.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202606.csv",
+          "bytes": 146840,
+          "sha256": "7b86662546bd7b61a256dcedba056888dca01f8fa6d6fe1aabf78cb954b6b24a",
+          "records": 1814,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202607.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202607.csv",
+          "bytes": 138599,
+          "sha256": "4e591f6c63626a18af8c070f8645dae0d8e55f9c29a1ebe2126c739119f0c389",
+          "records": 1785,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202608.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202608.csv",
+          "bytes": 874717,
+          "sha256": "e1f7a5b556c36acfcc8c345135c59956d2d3b9a6f1f71c7b96e7537f73a71927",
+          "records": 4225,
+          "year": 2026
+        },
+        {
+          "url": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202609.csv",
+          "status": "ok",
+          "path": "data/raw/jpcert/2026/202609.csv",
+          "bytes": 385968,
+          "sha256": "fb80ba55d20d9c17b976757f2fa9361327b15c19d05680c94ae33450e3164959",
+          "records": 2272,
+          "year": 2026
+        }
+      ],
+      "years": {
+        "2019": {
+          "files": 12,
+          "records": 6447
+        },
+        "2020": {
+          "files": 12,
+          "records": 12127
+        },
+        "2021": {
+          "files": 12,
+          "records": 27909
+        },
+        "2022": {
+          "files": 12,
+          "records": 61918
+        },
+        "2023": {
+          "files": 12,
+          "records": 60794
+        },
+        "2024": {
+          "files": 12,
+          "records": 56912
+        },
+        "2025": {
+          "files": 12,
+          "records": 42434
+        },
+        "2026": {
+          "files": 9,
+          "records": 22151
+        }
+      },
+      "records": 290692
+    },
+    "phishing_database": {
+      "status": "ok",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-links-ACTIVE.txt",
+          "status": "ok",
+          "path": "data/raw/phishing_links.txt",
+          "bytes": 65823890,
+          "sha256": "be4a179b3ac92b7135595b459c2c9867fe681c12209489dd99517db8407a67c6",
+          "records": 789052
+        },
+        {
+          "url": "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-domains-ACTIVE.txt",
+          "status": "ok",
+          "path": "data/raw/phishing_domains.txt",
+          "bytes": 11023128,
+          "sha256": "70c6c2e24e6b3484e7ace27b079723e55937bc1f4cbd98bea38a472ec8e37326",
+          "records": 392178
+        }
+      ],
+      "records": 1181230
+    },
+    "tranco": {
+      "status": "ok",
+      "source": "tranco",
+      "list_id": "JZW4Y",
+      "files": [
+        {
+          "url": "https://tranco-list.eu/download/JZW4Y/1000000",
+          "status": "ok",
+          "path": "data/raw/tranco.csv",
+          "bytes": 22691698,
+          "sha256": "6c59080a99524a9a9e5da71f9ca203c7ee063ab50bbf75a6e65ddc9ed481f40c",
+          "records": 1000000,
+          "list_id": "JZW4Y"
+        }
+      ],
+      "records": 1000000
+    },
+    "citizenlab": {
+      "status": "ok",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/citizenlab/test-lists/master/lists/global.csv",
+          "status": "ok",
+          "path": "data/raw/citizenlab_global.csv",
+          "bytes": 170498,
+          "sha256": "2ff7ab290f6f1d2656748064fe41f49a39d8f70b900aafef24098015e19968a7",
+          "records": 1727
+        }
+      ],
+      "records": 1727
+    }
+  }
+}

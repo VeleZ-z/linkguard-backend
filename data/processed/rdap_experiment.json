@@ -1,0 +1,61 @@
+{
+  "caso_ilustrativo": {
+    "dias": 1440,
+    "dominio": "vgydea.com",
+    "estado": "ok"
+  },
+  "criterio": {
+    "dominios_max": 2000,
+    "fpr_objetivo": 0.03,
+    "ganancia_min_pp": 3.0,
+    "p95_max_ms": 1500.0
+  },
+  "decision": {
+    "aprobar": false,
+    "criterio_latencia": true,
+    "criterio_recall": false,
+    "ganancia_pp_fpr_3": 0.0,
+    "p95_total_ms": 269.124,
+    "texto": "**NO cumple el criterio de promoción**: no se implementa el cliente RDAP en producción; la señal queda documentada como experimento negativo."
+  },
+  "generado": "2026-11-26T12:59:47.727967+00:00",
+  "medidas": {
+    "con_fecha": 804,
+    "dominios": 1599,
+    "errores": 80,
+    "errores_evaluacion": 0,
+    "negativos": 800,
+    "no_consultados": 0,
+    "no_registrados": 379,
+    "nuevos": 5,
+    "nuevos_negativos": 1,
+    "nuevos_positivos": 4,
+    "p95_local_ms": 3.456,
+    "p95_rdap_ms": 266.277,
+    "p95_total_ms": 269.124,
+    "positivos": 799,
+    "recall_base": {
+      "0.010": {
+        "recall": 0.95875,
+        "umbral": 31.0
+      },
+      "0.030": {
+        "recall": 0.95875,
+        "umbral": 31.0
+      }
+    },
+    "recall_rdap": {
+      "0.010": {
+        "recall": 0.95875,
+        "umbral": 31.0
+      },
+      "0.030": {
+        "recall": 0.95875,
+        "umbral": 31.0
+      }
+    },
+    "sin_servidor": 336
+  },
+  "modo": "live",
+  "semilla": 5
+}

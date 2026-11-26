@@ -1,0 +1,247 @@
+{
+  "evaluated_at": "2026-11-25T23:36:28.978376+00:00",
+  "input": "data/processed/benchmark.tsv",
+  "input_sha256": "9b55df5c0436d9db5be674038217631342250282b64dcb54632314f98c0a6e66",
+  "rows": 7812,
+  "errors": 0,
+  "summary": {
+    "tp": 85,
+    "fn": 4679,
+    "fp": 2,
+    "tn": 3046,
+    "precision": 0.9770114942528736,
+    "recall": 0.017842149454240133,
+    "f1": 0.03504432075860647,
+    "accuracy": 0.4007936507936508,
+    "fpr": 0.0006561679790026247
+  },
+  "sources": {
+    "citizenlab": {
+      "n": 1500,
+      "Bajo": 1500,
+      "Medio": 0,
+      "Alto": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 1.0,
+      "fpr": 0.0
+    },
+    "hardneg": {
+      "n": 48,
+      "Bajo": 46,
+      "Medio": 2,
+      "Alto": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 0.9583333333333334,
+      "fpr": 0.041666666666666664
+    },
+    "jpcert": {
+      "n": 2364,
+      "Bajo": 2326,
+      "Medio": 38,
+      "Alto": 0,
+      "precision": 1.0,
+      "recall": 0.016074450084602367,
+      "f1": 0.031640299750208156,
+      "accuracy": 0.016074450084602367,
+      "fpr": 0.0
+    },
+    "phishdb": {
+      "n": 2400,
+      "Bajo": 2353,
+      "Medio": 46,
+      "Alto": 1,
+      "precision": 1.0,
+      "recall": 0.019583333333333335,
+      "f1": 0.03841438496117695,
+      "accuracy": 0.019583333333333335,
+      "fpr": 0.0
+    },
+    "top10k": {
+      "n": 1500,
+      "Bajo": 1500,
+      "Medio": 0,
+      "Alto": 0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "accuracy": 1.0,
+      "fpr": 0.0
+    }
+  },
+  "recall_at_fpr": [
+    {
+      "target": 0.003,
+      "recall": 0.020151133501259445,
+      "threshold": 30
+    },
+    {
+      "target": 0.01,
+      "recall": 0.10201511335012595,
+      "threshold": 17
+    },
+    {
+      "target": 0.03,
+      "recall": 0.20361041141897565,
+      "threshold": 15
+    },
+    {
+      "target": 0.05,
+      "recall": 0.3505457598656591,
+      "threshold": 7
+    }
+  ],
+  "grouped": {
+    "n": 2358,
+    "positivos": 1437,
+    "negativos": 921,
+    "precision": 0.9285714285714286,
+    "recall": 0.018093249826026444,
+    "f1": 0.03549488054607509,
+    "accuracy": 0.40076335877862596,
+    "fpr": 0.002171552660152009
+  },
+  "temporal": {
+    "old": {
+      "n": 1484,
+      "positivos": 1484,
+      "recall": 0.02425876010781671
+    },
+    "new": {
+      "n": 587,
+      "positivos": 587,
+      "recall": 0.0034071550255536627
+    }
+  },
+  "per_year": {
+    "2019": {
+      "n": 289,
+      "positivos": 289,
+      "Bajo": 283,
+      "Medio": 6,
+      "Alto": 0,
+      "recall": 0.020761245674740483
+    },
+    "2020": {
+      "n": 299,
+      "positivos": 299,
+      "Bajo": 272,
+      "Medio": 27,
+      "Alto": 0,
+      "recall": 0.0903010033444816
+    },
+    "2021": {
+      "n": 300,
+      "positivos": 300,
+      "Bajo": 298,
+      "Medio": 2,
+      "Alto": 0,
+      "recall": 0.006666666666666667
+    },
+    "2022": {
+      "n": 298,
+      "positivos": 298,
+      "Bajo": 297,
+      "Medio": 1,
+      "Alto": 0,
+      "recall": 0.003355704697986577
+    },
+    "2023": {
+      "n": 298,
+      "positivos": 298,
+      "Bajo": 298,
+      "Medio": 0,
+      "Alto": 0,
+      "recall": 0.0
+    },
+    "2024": {
+      "n": 293,
+      "positivos": 293,
+      "Bajo": 293,
+      "Medio": 0,
+      "Alto": 0,
+      "recall": 0.0
+    },
+    "2025": {
+      "n": 296,
+      "positivos": 296,
+      "Bajo": 296,
+      "Medio": 0,
+      "Alto": 0,
+      "recall": 0.0
+    },
+    "2026": {
+      "n": 291,
+      "positivos": 291,
+      "Bajo": 289,
+      "Medio": 2,
+      "Alto": 0,
+      "recall": 0.006872852233676976
+    }
+  },
+  "latency_ms": {
+    "p50": 0.11362199984432664,
+    "p95": 0.1864930000010645,
+    "mean": 0.1271155066537692
+  },
+  "top_rules": [
+    {
+      "rule": "F11_SOCIAL_ENGINEERING_KEYWORDS",
+      "activations": 910,
+      "fraction": 0.11648745519713262
+    },
+    {
+      "rule": "F01_EXCESSIVE_LENGTH",
+      "activations": 627,
+      "fraction": 0.08026113671274962
+    },
+    {
+      "rule": "F07_HYPHENS_IN_DOMAIN",
+      "activations": 324,
+      "fraction": 0.041474654377880185
+    },
+    {
+      "rule": "F03_MULTIPLE_SUBDOMAINS",
+      "activations": 306,
+      "fraction": 0.03917050691244239
+    },
+    {
+      "rule": "F02_DIRECT_IP",
+      "activations": 60,
+      "fraction": 0.007680491551459293
+    },
+    {
+      "rule": "F05_URL_SHORTENER",
+      "activations": 37,
+      "fraction": 0.004736303123399898
+    },
+    {
+      "rule": "F08_SCHEMA_REDIRECT",
+      "activations": 26,
+      "fraction": 0.0033282130056323605
+    },
+    {
+      "rule": "F06_AT_SYMBOL",
+      "activations": 13,
+      "fraction": 0.0016641065028161802
+    },
+    {
+      "rule": "F04_SHANNON_ENTROPY",
+      "activations": 7,
+      "fraction": 0.0008960573476702509
+    },
+    {
+      "rule": "F10_SPECIAL_CHARS_RATIO",
+      "activations": 4,
+      "fraction": 0.0005120327700972862
+    },
+    {
+      "rule": "F09_NON_STANDARD_PORT",
+      "activations": 4,
+      "fraction": 0.0005120327700972862
+    }
+  ]
+}

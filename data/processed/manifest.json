@@ -1,0 +1,38 @@
+{
+  "built_at": "2026-11-25T23:35:57.499281+00:00",
+  "seed": 5,
+  "profiles": {
+    "benchmark": {
+      "path": "data/processed/benchmark.tsv",
+      "sha256": "9b55df5c0436d9db5be674038217631342250282b64dcb54632314f98c0a6e66",
+      "rows": 7812,
+      "labels": {
+        "positivos": 4764,
+        "negativos": 3048
+      },
+      "sources": {
+        "citizenlab": 1500,
+        "hardneg": 48,
+        "jpcert": 2364,
+        "phishdb": 2400,
+        "top10k": 1500
+      }
+    },
+    "train": {
+      "path": "data/processed/dataset.tsv",
+      "sha256": "1269343745a539350b6adcf0e5307229032fe42f6de6c557b3c344bc7cf7a38a",
+      "rows": 77642,
+      "labels": {
+        "positivos": 39996,
+        "negativos": 37646
+      },
+      "sources": {
+        "citizenlab": 1598,
+        "hardneg": 48,
+        "jpcert": 20000,
+        "legit": 36000,
+        "phishdb": 19996
+      }
+    }
+  }
+}
