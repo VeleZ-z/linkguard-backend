@@ -105,12 +105,24 @@ def test_brecha_conjunto_amplio_declarada(v3_sin_red: None) -> None:
     relaja la allowlist: el usuario prioriza detectar phishing sobre evitar
     esos falsos positivos. Medición local de referencia: 20 marcadas entre
     las primeras 200 URLs del archivo.
+
+    Guardia añadida tras la auditoría H5-T16: la brecha no debe extenderse a
+    dominios de confianza no abusables. Se verifica con las señales reales de
+    reputación, sin tocar umbrales ni la allowlist.
     """
     urls = _leer_urls(AMPLIO)
 
     assert len(urls) >= 200
     respuestas = asyncio.run(_analizar(urls))
-    marcadas = sum(1 for respuesta in respuestas if respuesta.risk_level.value in NIVELES_MARCADOS)
+    marcadas = [
+        (url, respuesta)
+        for url, respuesta in zip(urls, respuestas, strict=True)
+        if respuesta.risk_level.value in NIVELES_MARCADOS
+    ]
 
-    # La brecha se declara, no se oculta ni se usa como criterio de rechazo.
-    assert marcadas >= 0
+    # La brecha se declara, no se oculta; 141 es el techo observado y bajarla
+    # nunca debe lograrse reduciendo sensibilidad.
+    assert len(marcadas) <= 141
+    for url, _respuesta in marcadas:
+        señales = get_reputation(normalize(url))
+        assert not señales.allowlisted or señales.abusable

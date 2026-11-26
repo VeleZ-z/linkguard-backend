@@ -7,6 +7,9 @@ trazas internas al cliente.
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
 from fastapi import FastAPI, Request
@@ -20,6 +23,8 @@ from app.core.config import get_settings
 from app.core.errors import LinkGuardError, URLTooLongError
 from app.core.logging import configure_logging, get_logger
 from app.core.rate_limit import limiter
+from app.ml.model import get_model
+from app.reputation import get_load_status
 
 #: Identidad publicada por el endpoint de salud y el contrato.
 SERVICE_NAME: str = "linkguard-api"
@@ -29,6 +34,35 @@ settings = get_settings()
 configure_logging()
 logger = get_logger()
 
+
+def _cargar_artefactos_al_arranque() -> None:
+    """Verifica modelo y reputación al arranque sin propagar fallos (RNF-107).
+
+    Se ejecuta en un hilo del ciclo de vida: los artefactos quedan listos para
+    la primera petición, pero ``/health`` no espera a que terminen (RNF-109).
+    """
+    try:
+        estados = get_load_status()
+        disponible = get_model().available
+        logger.info("Artefactos listos: %s; modelo_disponible=%s", estados, disponible)
+    except Exception as exc:
+        logger.warning("Fallo al cargar artefactos al arranque: %s", type(exc).__name__)
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI) -> AsyncIterator[None]:
+    """Inicia la carga en segundo plano y la espera solo al apagado."""
+    tarea = asyncio.create_task(
+        asyncio.to_thread(_cargar_artefactos_al_arranque),
+        name="linkguard-artefactos",
+    )
+    application.state.startup_task = tarea
+    try:
+        yield
+    finally:
+        await tarea
+
+
 app = FastAPI(
     title="LinkGuard API",
     version=SERVICE_VERSION,
@@ -36,6 +70,7 @@ app = FastAPI(
         "Servicio de evaluación sintáctico-léxica del riesgo de phishing en "
         "URLs. Análisis local sin conexiones al enlace evaluado (RNF-101)."
     ),
+    lifespan=lifespan,
 )
 
 #: slowapi exige exponer el limitador en el estado de la aplicación.
@@ -121,4 +156,4 @@ async def health() -> dict[str, str]:
 
 app.include_router(api_router, prefix="/api/v1")
 
-__all__ = ["SERVICE_NAME", "SERVICE_VERSION", "app"]
+__all__ = ["SERVICE_NAME", "SERVICE_VERSION", "app", "lifespan"]

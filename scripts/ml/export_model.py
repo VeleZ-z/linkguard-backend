@@ -33,6 +33,7 @@ from app.ml.features import N_FEATURES  # noqa: E402
 
 DEFAULT_STATE: Path = ROOT / "data" / "processed" / "model_state.json"
 DEFAULT_OUTPUT: Path = ROOT / "app" / "engine" / "data" / "model_v1.json"
+MANIFEST_PATH: Path = ROOT / "app" / "engine" / "data" / "blocklist" / "manifest.json"
 MAX_BYTES: int = 3 * 1024 * 1024
 # 2e-3 reduce el artefacto a ~2.6 MB (límite 3 MB) sin cambiar el AUC de la
 # muestra de validación (Δ = 0.0000 en la medición de H5-T09).
@@ -60,6 +61,31 @@ def pure_predict(features: dict[int, float], bias: float, weights: dict[int, flo
 def prune_weights(weights: dict[int, float], min_abs: float) -> dict[int, float]:
     """Elimina pesos cuya magnitud es menor que ``min_abs``."""
     return {index: value for index, value in weights.items() if abs(value) >= min_abs}
+
+
+def sync_manifest(size_bytes: int, sha256: str, output_path: Path) -> None:
+    """Publica el SHA-256 del modelo en el manifiesto (RNF-107).
+
+    Solo se aplica al artefacto canónico: las exportaciones a rutas temporales
+    no modifican el manifiesto versionado.
+    """
+    if output_path != DEFAULT_OUTPUT or not MANIFEST_PATH.is_file():
+        return
+
+    manifest: dict[str, Any] = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    sources = manifest.setdefault("sources", {})
+    anterior = sources.get("model_v1", {}).get("size_bytes", 0)
+    sources["model_v1"] = {
+        "type": "linear_model_json",
+        "path": str(output_path.relative_to(ROOT)),
+        "size_bytes": size_bytes,
+        "sha256": sha256,
+    }
+    manifest["total_size_mb"] = float(manifest.get("total_size_mb", 0.0)) - anterior
+    manifest["total_size_mb"] += size_bytes / (1024 * 1024)
+    MANIFEST_PATH.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
 
 
 def export_model(
@@ -107,6 +133,8 @@ def export_model(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(payload, encoding="utf-8")
+    sha256 = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    sync_manifest(size_bytes, sha256, output_path)
 
     try:
         reported_path = str(output_path.relative_to(ROOT))
@@ -116,7 +144,7 @@ def export_model(
         "path": reported_path,
         "size_bytes": size_bytes,
         "size_mb": round(size_bytes / (1024 * 1024), 4),
-        "sha256": hashlib.sha256(payload.encode("utf-8")).hexdigest(),
+        "sha256": sha256,
         "weights_full": len(full_weights),
         "weights_kept": len(pruned_weights),
         "weights_pruned": len(full_weights) - len(pruned_weights),

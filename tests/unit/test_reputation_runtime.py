@@ -110,6 +110,23 @@ class TestLoaderRuntime:
         assert estado["blocklist_urls"] == "ok"
         assert estado["blocklist_hosts"] == "ok"
 
+    def test_artefacto_sobredimensionado_degrada(
+        self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        monkeypatch.setitem(loader.MAX_ARTIFACT_BYTES, "allowlist", 1)
+        monkeypatch.setattr(loader, "_loaded", False)
+        monkeypatch.setattr(
+            loader,
+            "_load_status",
+            {"allowlist": "missing", "blocklist_urls": "missing", "blocklist_hosts": "missing"},
+        )
+
+        with caplog.at_level("WARNING", logger="linkguard.reputation"):
+            estado = loader.get_load_status()
+
+        assert estado["allowlist"] == "degraded"
+        assert "tamaño máximo" in caplog.text
+
     def test_senales_de_reputacion(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(loader, "_loaded", True)
         monkeypatch.setattr(

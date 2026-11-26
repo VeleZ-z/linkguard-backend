@@ -53,6 +53,9 @@ CITIZENLAB_URL: str = (
 )
 DEFAULT_YEARS: tuple[int, ...] = tuple(range(2019, 2027))
 USER_AGENT: str = "linkguard-accuracy-lab/1.0"
+#: Cadena de suministro: tope por descarga y número máximo de saltos (RF-505).
+MAX_DOWNLOAD_BYTES: int = 64 * 1024 * 1024
+MAX_REDIRECTS: int = 3
 
 
 def _sha256(path: Path) -> str:
@@ -99,11 +102,19 @@ def _download(
         status = "cached"
     else:
         try:
-            response = client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPError as exc:
+            with client.stream("GET", url) as response:
+                response.raise_for_status()
+                declarado = response.headers.get("content-length")
+                if declarado and int(declarado) > MAX_DOWNLOAD_BYTES:
+                    return {"url": url, "status": "error", "error": "too_large"}
+                contenido = bytearray()
+                for bloque in response.iter_bytes():
+                    contenido.extend(bloque)
+                    if len(contenido) > MAX_DOWNLOAD_BYTES:
+                        return {"url": url, "status": "error", "error": "too_large"}
+        except (httpx.HTTPError, ValueError) as exc:
             return {"url": url, "status": "error", "error": type(exc).__name__}
-        dest.write_bytes(response.content)
+        dest.write_bytes(contenido)
         status = "ok"
 
     item: dict[str, Any] = {
@@ -272,6 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     with httpx.Client(
         timeout=120.0,
         follow_redirects=True,
+        max_redirects=MAX_REDIRECTS,
         headers={"User-Agent": USER_AGENT},
     ) as client:
         sources = {

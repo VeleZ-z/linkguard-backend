@@ -37,6 +37,13 @@ MANIFEST_PATH: Path = BLOCKLIST_DIR / "manifest.json"
 
 ABUSABLE_SERVICES_PATH: Path = DATA_DIR / "abusable_services.py"
 ALLOWLIST_PATH: Path = DATA_DIR / "allowlist_top100k.txt"
+MODEL_PATH: Path = DATA_DIR / "model_v1.json"
+
+#: Tope total del conjunto de artefactos (incluye el modelo, RNF-107).
+MAX_TOTAL_BYTES: int = 15 * 1024 * 1024
+#: Límites de cualquier descarga de feed realizada en CI (RF-505).
+MAX_FEED_BYTES: int = 64 * 1024 * 1024
+MAX_FEED_REDIRS: int = 3
 
 
 # ---------------------------------------------------------------------------
@@ -67,7 +74,19 @@ def _download_tranco_top100k() -> list[str]:
     url = "https://tranco-list.eu/download/JZW4Y/1000000"
     try:
         result = subprocess.run(
-            ["curl", "-sS", "-L", "-m", "60", url],
+            [
+                "curl",
+                "-sS",
+                "-L",
+                "--fail",
+                "--max-redirs",
+                str(MAX_FEED_REDIRS),
+                "--max-filesize",
+                str(MAX_FEED_BYTES),
+                "-m",
+                "60",
+                url,
+            ],
             capture_output=True,
             timeout=120,
         )
@@ -509,10 +528,26 @@ def build_artifacts() -> dict[str, Any]:
     openphish_data = None
     try:
         result = subprocess.run(
-            ["curl", "-sS", "-L", "-m", "30", "-w", "%{http_code}", openphish_url],
+            [
+                "curl",
+                "-sS",
+                "-L",
+                "--fail",
+                "--max-redirs",
+                str(MAX_FEED_REDIRS),
+                "--max-filesize",
+                str(MAX_FEED_BYTES),
+                "-m",
+                "30",
+                "-w",
+                "%{http_code}",
+                openphish_url,
+            ],
             capture_output=True,
             timeout=40,
         )
+        if result.returncode != 0:
+            raise RuntimeError(f"curl falló con código {result.returncode}")
         openphish_http_code = int(result.stdout.decode("utf-8", errors="replace").strip()[-3:])
         openphish_data = result.stdout
     except Exception:
@@ -660,11 +695,33 @@ def build_artifacts() -> dict[str, Any]:
         "sha256": _sha256(blocklist_hosts_path),
     }
 
+    # El modelo es un artefacto de solo lectura más: su SHA-256 se declara en
+    # el mismo manifiesto para que runtime lo verifique al arranque (RNF-107).
+    if MODEL_PATH.is_file():
+        manifest["sources"]["model_v1"] = {
+            "type": "linear_model_json",
+            "path": str(MODEL_PATH.relative_to(ROOT)),
+            "size_bytes": MODEL_PATH.stat().st_size,
+            "sha256": _sha256(MODEL_PATH),
+        }
+    else:
+        manifest["sources"].pop("model_v1", None)
+
     # Calcular tamaño total de los artefactos generados
     total_bytes = 0
-    for p in [ALLOWLIST_PATH, blocklist_urls_path, blocklist_hosts_path, MANIFEST_PATH]:
+    for p in [
+        ALLOWLIST_PATH,
+        blocklist_urls_path,
+        blocklist_hosts_path,
+        MODEL_PATH,
+        MANIFEST_PATH,
+    ]:
         if p.exists():
             total_bytes += p.stat().st_size
+    if total_bytes > MAX_TOTAL_BYTES:
+        raise RuntimeError(
+            f"Artefactos demasiado grandes: {total_bytes} bytes (> {MAX_TOTAL_BYTES})"
+        )
     manifest["total_size_mb"] = total_bytes / (1024 * 1024)
     print("✔ Tamaño total de artefactos: {:.2f} MB".format(manifest["total_size_mb"]))
 

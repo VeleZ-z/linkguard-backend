@@ -46,15 +46,17 @@ RUN groupadd -g 10001 appgroup \
     && useradd -u 10001 -g appgroup -M -s /usr/sbin/nologin appuser
 
 COPY --from=builder /opt/venv /opt/venv
+COPY --chown=appuser:appgroup ./app /app/app
 
 # La imagen base trae su propio pip/ensurepip dentro del intérprete del sistema;
-# el servicio no los necesita en tiempo de ejecución.
+# el servicio no los necesita en tiempo de ejecución. RNF-107: en la misma capa
+# se dejan los artefactos como solo lectura, incluso si el orquestador no monta
+# el contenedor con `--read-only` (evita duplicar 12 MB en una capa posterior).
 RUN rm -rf /usr/local/lib/python3.12/site-packages/pip* \
     /usr/local/lib/python3.12/site-packages/setuptools* \
     /usr/local/lib/python3.12/ensurepip \
-    /usr/local/lib/python3.12/site-packages/__pycache__
-
-COPY --chown=appuser:appgroup ./app /app/app
+    /usr/local/lib/python3.12/site-packages/__pycache__ \
+    && chmod -R a-w /app/app/engine/data
 
 # Sin escrituras: el usuario no es dueño de /app (solo lectura del código).
 USER appuser

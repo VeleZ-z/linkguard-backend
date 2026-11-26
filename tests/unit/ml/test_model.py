@@ -9,6 +9,7 @@ Python puro: no se importan NumPy ni scikit-learn (RNF-109).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import statistics
 import time
@@ -186,6 +187,45 @@ class TestDegradacionElegante:
         resultado = score_results([_resultado("F02", 25), _resultado("F08", 20)])
         assert resultado.score == 45
         assert resultado.risk_level is RiskLevel.MEDIO
+
+
+class TestIntegridadSha256RNF107:
+    """RNF-107: el modelo solo se usa si coincide con el manifiesto."""
+
+    def test_manifiesto_publica_el_sha_del_artefacto(self) -> None:
+        manifiesto = json.loads(model_mod.MANIFEST_PATH.read_text(encoding="utf-8"))
+        entrada = manifiesto["sources"]["model_v1"]
+
+        assert entrada["sha256"] == hashlib.sha256(MODEL_PATH.read_bytes()).hexdigest()
+        assert entrada["size_bytes"] == MODEL_PATH.stat().st_size
+
+    def test_sha_distinto_desactiva_el_modelo(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        cache_modelo_aislado: None,
+    ) -> None:
+        monkeypatch.setattr(model_mod, "_manifest_sha256", lambda: "0" * 64)
+
+        with caplog.at_level("WARNING", logger="linkguard.ml"):
+            modelo = get_model()
+
+        assert modelo.available is False
+        assert "ML_MODEL_INVALID" in caplog.text
+
+    def test_manifiesto_sin_entrada_desactiva_el_modelo(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        caplog: pytest.LogCaptureFixture,
+        cache_modelo_aislado: None,
+    ) -> None:
+        monkeypatch.setattr(model_mod, "_manifest_sha256", lambda: None)
+
+        with caplog.at_level("WARNING", logger="linkguard.ml"):
+            modelo = get_model()
+
+        assert modelo.available is False
+        assert "sin SHA-256 verificable" in caplog.text
 
 
 class TestExplicabilidadRF604:

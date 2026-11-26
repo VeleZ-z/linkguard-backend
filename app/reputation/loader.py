@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import threading
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,14 @@ MANIFEST_PATH: Path = (
 #: Tamaño del bloque de lectura para calcular SHA-256 sin cargar 9 MB de golpe.
 _CHUNK_SIZE: int = 1024 * 1024
 
+#: Límite máximo por artefacto (RNF-107). Los valores actuales están muy por
+#: debajo del tope y dejan holgura para el refresco semanal de feeds.
+MAX_ARTIFACT_BYTES: dict[str, int] = {
+    "allowlist": 4 * 1024 * 1024,
+    "blocklist_urls": 8 * 1024 * 1024,
+    "blocklist_hosts": 6 * 1024 * 1024,
+}
+
 #: Estado por artefacto: "ok", "degraded" o "missing".
 _load_status: dict[str, str] = {
     "allowlist": "missing",
@@ -46,6 +55,9 @@ _load_status: dict[str, str] = {
 
 #: Evita repetir la verificación en cada solicitud.
 _loaded: bool = False
+
+#: Cerrojo para la carga concurrente (arranque + primera petición).
+_load_lock: threading.Lock = threading.Lock()
 
 
 class ReputationSignals:
@@ -141,6 +153,11 @@ def _verify_and_load_allowlist() -> None:
         )
         return
 
+    if ALLOWLIST_PATH.stat().st_size > MAX_ARTIFACT_BYTES["allowlist"]:
+        _load_status["allowlist"] = "degraded"
+        _log.warning("REPUTATION_ARTIFACT_INVALID: allowlist excede el tamaño máximo")
+        return
+
     actual = _sha256_of(ALLOWLIST_PATH)
     esperado = _manifest_sha256("allowlist")
     if actual is None or esperado is None:
@@ -175,6 +192,11 @@ def _verify_and_load_blocklist(key: str, path: Path, artifact_name: str) -> None
         _log.warning("REPUTATION_ARTIFACT_INVALID: %s no encontrado", artifact_name)
         return
 
+    if path.stat().st_size > MAX_ARTIFACT_BYTES[artifact_name]:
+        _load_status[artifact_name] = "degraded"
+        _log.warning("REPUTATION_ARTIFACT_INVALID: %s excede el tamaño máximo", artifact_name)
+        return
+
     actual = _sha256_of(path)
     esperado = _manifest_sha256(key)
     if actual is None or esperado is None:
@@ -192,38 +214,43 @@ def _verify_and_load_blocklist(key: str, path: Path, artifact_name: str) -> None
 
 
 def _ensure_loaded() -> None:
-    """Verifica los tres artefactos una sola vez (operación idempotente)."""
+    """Verifica los tres artefactos una sola vez (operación idempotente).
+
+    El cerrojo evita que la carga disparada al arranque y la primera petición
+    concurrentes dupliquen la verificación (RNF-107/RNF-109).
+    """
     global _loaded
 
-    if _loaded:
-        return
+    with _load_lock:
+        if _loaded:
+            return
 
-    verificaciones: tuple[tuple[str, Callable[..., None], tuple[Any, ...]], ...] = (
-        ("allowlist", _verify_and_load_allowlist, ()),
-        (
-            "blocklist_urls",
-            _verify_and_load_blocklist,
-            ("blocklist_urls", BLOCKLIST_URLS_PATH, "blocklist_urls"),
-        ),
-        (
-            "blocklist_hosts",
-            _verify_and_load_blocklist,
-            ("blocklist_hosts", BLOCKLIST_HOSTS_PATH, "blocklist_hosts"),
-        ),
-    )
+        verificaciones: tuple[tuple[str, Callable[..., None], tuple[Any, ...]], ...] = (
+            ("allowlist", _verify_and_load_allowlist, ()),
+            (
+                "blocklist_urls",
+                _verify_and_load_blocklist,
+                ("blocklist_urls", BLOCKLIST_URLS_PATH, "blocklist_urls"),
+            ),
+            (
+                "blocklist_hosts",
+                _verify_and_load_blocklist,
+                ("blocklist_hosts", BLOCKLIST_HOSTS_PATH, "blocklist_hosts"),
+            ),
+        )
 
-    for nombre, funcion, argumentos in verificaciones:
-        try:
-            funcion(*argumentos)
-        except Exception as exc:
-            _load_status[nombre] = "degraded"
-            _log.warning(
-                "REPUTATION_ARTIFACT_INVALID: fallo al verificar %s (%s)",
-                nombre,
-                type(exc).__name__,
-            )
+        for nombre, funcion, argumentos in verificaciones:
+            try:
+                funcion(*argumentos)
+            except Exception as exc:
+                _load_status[nombre] = "degraded"
+                _log.warning(
+                    "REPUTATION_ARTIFACT_INVALID: fallo al verificar %s (%s)",
+                    nombre,
+                    type(exc).__name__,
+                )
 
-    _loaded = True
+        _loaded = True
 
 
 def get_load_status() -> dict[str, str]:

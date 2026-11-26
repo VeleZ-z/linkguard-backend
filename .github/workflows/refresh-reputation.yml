@@ -32,6 +32,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Fetch raw feeds (solo CI)
+        run: |
+          python scripts/ml/fetch_data.py
+        env:
+          LINKGUARD_ENV: production
+
       - name: Build reputation artifacts
         run: |
           python scripts/ml/build_reputation_artifacts.py
@@ -50,16 +56,7 @@ jobs:
             git diff --name-only
           fi
 
-      - name: Commit and push changes (if any)
-        if: steps.changes.outputs.no_changes == 'false'
-        run: |
-          git config user.name "linkguard-bot"
-          git config user.email "bot@linkguard.example"
-          git add app/engine/data/allowlist_top100k.txt
-          git add app/engine/data/blocklist/
-          git commit -f -m "chore: regenerate reputation artifacts [skip ci]"
-          git push origin main
-
+      # No se hace push directo a main: toda regeneración se revisa mediante PR.
       - name: Open PR if changes were rebuilt
         if: steps.changes.outputs.no_changes == 'false'
         uses: peter-evans/create-pull-request@v4
@@ -72,7 +69,7 @@ jobs:
             - `app/engine/data/allowlist_top100k.txt`
             - `app/engine/data/blocklist/blocklist_urls.bin`
             - `app/engine/data/blocklist/blocklist_hosts.bin`
-            - `app/engine/data/blocklist/manifest.json`
+            - `app/engine/data/blocklist/manifest.json` (incluye el SHA-256 de `model_v1.json`)
 
             No changes to source code or configuration.
           branch: refresh-artifacts-${{ github.run_number }}

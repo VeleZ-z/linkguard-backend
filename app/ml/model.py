@@ -5,13 +5,18 @@ en una instancia :class:`LinearModel` en memoria. No se importan NumPy ni
 scikit-learn: la predicción es ``p = σ(bias + Σ wᵢxᵢ)`` sobre el vector hashed
 que produce :func:`app.ml.features.extract_features`.
 
-Si el JSON falta, está corrupto o no tiene el esquema esperado, se devuelve un
+El SHA-256 del artefacto se comprueba contra ``manifest.json`` antes de usarlo
+(RNF-107), junto con un límite máximo de 3 MB por artefacto.
+
+Si el JSON falta, no coincide con el manifiesto, está corrupto o no tiene el
+esquema esperado, se devuelve un
 modelo deshabilitado (``available=False``) que predice ``0.0``. El servicio
 sigue respondiendo HTTP 200 con el puntaje de las reglas v2 (RNF-107/RNF-104).
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
@@ -27,6 +32,15 @@ _log = logging.getLogger("linkguard.ml")
 
 #: Artefacto de solo lectura incluido en la imagen (RF-602).
 MODEL_PATH: Path = Path(__file__).resolve().parents[1] / "engine" / "data" / "model_v1.json"
+
+#: Manifiesto compartido con los artefactos de reputación (RNF-107).
+MANIFEST_PATH: Path = (
+    Path(__file__).resolve().parents[2] / "app" / "engine" / "data" / "blocklist" / "manifest.json"
+)
+
+#: Clave del modelo dentro de ``manifest.json`` y tope de tamaño del artefacto.
+MANIFEST_KEY: str = "model_v1"
+MAX_MODEL_BYTES: int = 3 * 1024 * 1024
 
 #: Umbrales de reserva si el artefacto no está disponible (RF-603). No son
 #: secretos: son las constantes calibradas y publicadas en el informe v1.
@@ -102,14 +116,52 @@ class LinearModel:
         return default if value is None else float(value)
 
 
-def load_model(path: Path = MODEL_PATH) -> LinearModel:
-    """Lee y valida el artefacto JSON sin lanzar excepciones al llamador.
+def _manifest_sha256() -> str | None:
+    """Devuelve el SHA-256 declarado para el modelo, o None si no es usable."""
+    try:
+        contenido: Any = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        esperado: Any = contenido.get("sources", {}).get(MANIFEST_KEY, {}).get("sha256")
+    except Exception as exc:
+        _log.warning(
+            "ML_MODEL_INVALID: manifiesto no legible (%s)",
+            type(exc).__name__,
+        )
+        return None
+    return esperado if isinstance(esperado, str) and esperado else None
 
-    Cualquier fallo de lectura o esquema se degrada a un modelo deshabilitado y
-    se registra con el prefijo ``ML_MODEL_INVALID`` para observabilidad.
+
+def load_model(path: Path = MODEL_PATH) -> LinearModel:
+    """Lee, verifica por SHA-256 y valida el artefacto sin lanzar excepciones.
+
+    Cualquier fallo de tamaño, integridad, lectura o esquema se degrada a un
+    modelo deshabilitado y se registra con el prefijo ``ML_MODEL_INVALID``.
+    Así se cumple RNF-107 sin responder HTTP 500 (RNF-104).
     """
     try:
-        payload: Any = json.loads(path.read_text(encoding="utf-8"))
+        raw = path.read_bytes()
+    except OSError as exc:
+        _log.warning("ML_MODEL_INVALID: artefacto no legible (%s)", type(exc).__name__)
+        return LinearModel()
+
+    if len(raw) > MAX_MODEL_BYTES:
+        _log.warning("ML_MODEL_INVALID: artefacto excede el límite de 3 MB")
+        return LinearModel()
+
+    esperado = _manifest_sha256()
+    if esperado is None:
+        _log.warning("ML_MODEL_INVALID: artefacto sin SHA-256 verificable")
+        return LinearModel()
+    actual = hashlib.sha256(raw).hexdigest()
+    if actual != esperado:
+        _log.warning(
+            "ML_MODEL_INVALID: SHA mismatch (actual=%s expected=%s)",
+            actual[:8],
+            esperado[:8],
+        )
+        return LinearModel()
+
+    try:
+        payload: Any = json.loads(raw)
         raw_weights: Any = payload["weights"]
         raw_thresholds: Any = payload["thresholds"]
         weights = {int(index): float(value) for index, value in raw_weights.items()}

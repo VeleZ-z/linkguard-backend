@@ -109,8 +109,14 @@
       "count": 392350,
       "path": "app/engine/data/blocklist/blocklist_hosts.bin",
       "sha256": "859f8bd55739c91657ae963336ab1b3c0f6fce8c04790e0e2b6daf74802c7e78"
+    },
+    "model_v1": {
+      "type": "linear_model_json",
+      "path": "app/engine/data/model_v1.json",
+      "size_bytes": 2693349,
+      "sha256": "2330d0659d4e8c81565c99854af6dbeb572e99c10ddbb2ee3853e510ac905dcb"
     }
   },
   "errors": [],
-  "total_size_mb": 9.974709510803223
+  "total_size_mb": 12.54328727722168
 }
