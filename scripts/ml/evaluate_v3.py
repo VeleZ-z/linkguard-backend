@@ -64,8 +64,11 @@ from app.normalization import normalize  # noqa: E402
 from app.reputation import get_reputation  # noqa: E402
 from app.scoring.calibration import piecewise_linear  # noqa: E402
 from app.scoring.scorer import LOW_MAX, score_results, score_v3  # noqa: E402
-from export_model import DEFAULT_MIN_WEIGHT  # noqa: E402
-from train import build_matrix, fit, grouped_split, load_dataset, partition_masks  # noqa: E402
+
+# RF-605: NumPy/sklearn/scipy viven solo en ``requirements-ml.txt``. Se importan
+# dentro de las funciones que reentrenan para que importar este módulo (por
+# ejemplo desde el arnés RDAP o desde la CI sin dependencias ML) no falle.
+# Las funciones de evaluación usadas por el arnés son Python puro.
 
 # ``app.ml`` reexporta ``explain`` como función, por lo que se obtienen los
 # módulos por nombre para poder sustituir ``get_model`` durante el refit.
@@ -205,6 +208,9 @@ def modelo_reentrenado(
     :data:`export_model.DEFAULT_MIN_WEIGHT`. Los umbrales de la PL siguen siendo
     los del artefacto servido: no se calibran sobre el conjunto de prueba.
     """
+
+    from export_model import DEFAULT_MIN_WEIGHT  # noqa: PLC0415
+    from train import fit  # noqa: PLC0415
 
     estimado = fit(matriz, etiquetas, mascara_entrenamiento, seed=SEED)
     coeficientes = estimado.coef_[0]
@@ -1075,6 +1081,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", type=Path, default=DEFAULT_REPORT_PATH)
     parser.add_argument("--mini-benchmark-out", type=Path, default=None)
     args = parser.parse_args(argv)
+
+    from train import build_matrix, grouped_split, load_dataset, partition_masks  # noqa: PLC0415
 
     get_settings.cache_clear()
     umbrales = artifact_thresholds()
